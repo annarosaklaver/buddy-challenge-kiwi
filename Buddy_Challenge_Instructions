@@ -1,4 +1,4 @@
-*Part 2*
+*Part 2* - Due 27th Feb, deadline goal 25th Feb
 
 Write a reproducibility assessment for the paper's analysis (focus on the analysis that has been reported to have convergence issues)
 
@@ -9,3 +9,52 @@ Write a reproducibility assessment for the paper's analysis (focus on the analys
 Each buddy group leader submits their report as a markdown (.qmd) and knitted pdf file. 
 
 Naming convention for files: groupname_part2
+
+*Part 3* - Due 27th Feb, deadline goal 25th Feb
+
+Store your own re-analysis (including the original data and the reproducibility report) in your own repository on Github in a maximally reproducible way including
+
+    meta data,
+    a code book for the data,
+    stored with FAIR principles,
+    other documentation etc.
+    IMPORTANT: Your repository must allow a third party to reproduce the core results from a clean machine 
+
+Each buddy group leader submits the link to your Github repo here.
+
+*Part 4* - Due 27 March, goal 25th March
+
+Run a series of Bayesian models equivalent to the critical model in the original article that originally did not converge:
+
+    (a) run the closest equivalent of their analysis (i.e. same structure but using flat priors)
+    (b) run a proper model with proper, weakly informative priors and justify your prior choices;
+    interpret the results relative to the research question by interpreting the posteriors relative to zero;
+    write up the results and write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). 
+    add the report to your GitHub Repo from Part 3.
+
+Each buddy group leader additionally submits their report as a markdown (.qmd) and knitted pdf file here.
+
+Naming convention for files: groupname_part4
+
+*Part 5* - Due 17th April, goal 15th April
+
+This is Part 5 of the buddy challenge: 
+
+Define the smallest effect size of interest for the original research question and do a literature research to justify your choice. 
+
+    rerun your hypothesis test combining the concepts of Bayes Factor (BF) and Regions of Practical Equivalence (ROPE) (according to Roettger & Franke's method, 2025)
+    run a sensitivity analyses for different ROPES and priors;
+    write up the results accordingly.
+    save the analysis and report in your Github repository
+
+Each buddy group leader additionally submits their report as a markdown (.qmd) and knitted pdf file here. 
+
+Naming convention for files: groupname_part5
+
+*Part 6* - Presentation 22nd April
+
+This is Part 6 of the buddy challenge. Present and communicate your results in class (max 10 minutes). Your communication goal is to briefly inform your audience about the scientific claim in the article and how it is supported by their statistical analysis, how reproducible their findings were based on the available information, and whether the support for their claim remains convincing after re-analysing their analysis with appropriate Bayesian methods. Presentations take place on the 22nd of April. They do not have to be group presentations. You can dedicate a single presenter.
+
+Each buddy group leader submits their slides in pdf format the day before the presentation.
+
+Naming convention for files: groupname_part6
