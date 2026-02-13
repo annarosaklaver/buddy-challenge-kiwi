@@ -1,0 +1,45 @@
+---
+title: "study_1_reproduction"
+format: html
+editor: visual
+date: 2026-02-13
+author: Anna Rosa Klaver, Are Markku Alanen Tjihkkom, Jemima Agnew, Liradie Allen, Naomi Takizawa
+execute:
+  error: false
+  warning: false
+  message: false
+  cache: false
+#bibliography: 
+---
+
+# Preamble: Loading packages and configuration
+
+```{r}
+#| label: data_and_libraries
+#| echo: false
+
+# just run this code chunk
+# function to ignoring the setting of the relative path below when knitting
+run_if_not_knitting <- function(expr) {
+  if (!isTRUE(getOption("knitr.in.progress"))) {
+    eval(expr)
+  }
+}
+
+# nifty code using the pacman package
+# it checks if the packages specified below are installed, if not, they will be installed, if yes, they will be loaded
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(rstudioapi, tidyverse, lme4, ggeffects)
+
+# set the current working directory to the one where this file is
+run_if_not_knitting(current_working_dir <- dirname(rstudioapi::getActiveDocumentContext()$path))
+run_if_not_knitting(setwd(current_working_dir))
+```
+
+# Article:
+
+Hostetter, A. B., & Bahl, S. (2023). Comparing the cognitive load of gesture and action production: A dual-task study. *Language and Cognition*, *15*(3), 601–621. <https://doi.org/10.1017/langcog.2023.23>
+
+# Assignment:
+
+Assess whether you can analytically reproduce their analyses including descriptive numbers, graphs, and inferential results according to what they report in the paper (not following their scripts but their description in the paper).
