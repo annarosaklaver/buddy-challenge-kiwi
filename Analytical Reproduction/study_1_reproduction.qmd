@@ -36,10 +36,63 @@ run_if_not_knitting(current_working_dir <- dirname(rstudioapi::getActiveDocument
 run_if_not_knitting(setwd(current_working_dir))
 ```
 
-# Article:
+# Article
 
 Hostetter, A. B., & Bahl, S. (2023). Comparing the cognitive load of gesture and action production: A dual-task study. *Language and Cognition*, *15*(3), 601–621. <https://doi.org/10.1017/langcog.2023.23>
 
-# Assignment:
+# Task
 
 Assess whether you can analytically reproduce their analyses including descriptive numbers, graphs, and inferential results according to what they report in the paper (not following their scripts but their description in the paper).
+
+# Data Preparation
+
+## Load the data
+
+```{r}
+#| label: load-gesture
+
+# Load a copy of the original data into a dataframe
+gesture <- read_csv('reproduction_AGI_study_1_data.csv')
+
+# Have a look
+head(gesture)
+```
+
+## Tidy the data
+
+```{r}
+#| label: tidy-gesture
+
+# Exclude the data in which participant didn't follow the instructions
+gesture_tidy <- gesture |>
+  filter(Include == 'y')
+
+# Calculate proportion of data excluded
+1 - 1049/1176
+
+# This gets 10.8%, which is slightly more then the 10.6% the authors reported.
+
+# Remove columns we will not use
+gesture_tidy <- gesture_tidy |>
+  select(- c(Script,
+         `Start Time`,
+         Transcript,
+         `End Time`,
+         Comment,
+         Include))
+
+# To do: make the column names less awful  
+
+# Determine the trial counts for each condition x participant combination
+trial_counts_conditional <- table(Condition = gesture_tidy$Condition,
+                                  Participant = gesture_tidy$Participant) |>
+  as.data.frame()
+head(trial_counts_conditional)
+
+# Find the aggregate means and ranges per condition
+trial_counts_conditional |>
+  group_by(Condition) |>
+  summarise(mean_trials_per_participant = mean(Freq),
+            min_trials_per_participant = min(Freq),
+            max_trials_per_participant = max(Freq))
+```

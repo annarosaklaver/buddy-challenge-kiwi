@@ -1,4 +1,4 @@
-﻿Participant,Script,Trial,Condition,Start Time,Transcript,Index Words,index.speech,End Time,Seconds,wordcount,Disfluenices,TimeTalking,Gesture,Iconics,Beats,Comment,Letters,Locations,Both,Include
+Participant,Script,Trial,Condition,Start Time,Transcript,Index Words,index.speech,End Time,Seconds,wordcount,Disfluenices,TimeTalking,Gesture,Iconics,Beats,Comment,Letters,Locations,Both,Include
 1,2,1,M,0:10,there's a triangle with it's isoceles triangle and then there's a rhombus with four points dot at each point,0,0,0:24,14,19,1,0:14,,,,Keeps talking after done making,1,5,1,n
 7,1,1,G, ,,,0,,,0,,#VALUE!,,,,Started too early- skipped to #2,0,0,0,n
 11,3,1,NG,,,,0,,0,0,0,0:00,,,,Started at #2,0,0,0,n
