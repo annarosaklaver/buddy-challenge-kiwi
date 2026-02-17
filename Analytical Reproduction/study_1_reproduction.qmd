@@ -29,7 +29,7 @@ run_if_not_knitting <- function(expr) {
 # nifty code using the pacman package
 # it checks if the packages specified below are installed, if not, they will be installed, if yes, they will be loaded
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(rstudioapi, tidyverse, lme4, ggeffects)
+pacman::p_load(rstudioapi, tidyverse, lme4, lmerTest)
 
 # set the current working directory to the one where this file is
 run_if_not_knitting(current_working_dir <- dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -68,20 +68,33 @@ gesture_tidy <- gesture |>
   filter(Include == 'y')
 
 # Calculate proportion of data excluded
-1 - 1049/1176
-
+prop_excluded <- 1 - (nrow(gesture_tidy)/nrow(gesture))
+prop_excluded
 # This gets 10.8%, which is slightly more then the 10.6% the authors reported.
+# We have discarded 127 trials, which is 2 more than the 125 they report in total.
 
 # Remove columns we will not use
 gesture_tidy <- gesture_tidy |>
   select(- c(Script,
-         `Start Time`,
-         Transcript,
+             `Index Words`,
+            `Start Time`,
+              Transcript,
          `End Time`,
          Comment,
-         Include))
-
-# To do: make the column names less awful
+         Include,
+         TimeTalking)) |>
+  # Make the column names less awful
+  rename(Item = Trial, # We are guessing they use 'trial' to record specific combinations of grid and dot pattern, which they refer to when modeling as 'item'
+         Deictic = index.speech,
+         Word_count = wordcount,
+         Filled_pauses = Disfluenices,
+         Letters_recalled = Letters,
+         Locations_recalled = Locations,
+         Total_recalled = Both) |>
+  # Make condition labels clearer
+  mutate(Condition = case_when(Condition == 'M' ~ 'Make',
+                               Condition == 'G' ~ 'Gesture',
+                               Condition == 'NG' ~ 'Hands still'))
 ```
 
 ## Check data aggregates
@@ -114,5 +127,74 @@ trial_counts_conditional |>
             max_trials_per_participant = max(Freq))
 # The one case with zero trials per participant is Make condition, participant 2.
 # This likely is why our overall mean for Make is lower than the 6.50 they report.
-# But the mean trials per participant were spot-on otherwise, so I don't think they dropped participant 2. Don't know what they did.
+# But the mean trials per participant were spot-on otherwise, so I don't think they dropped participant 2. This likely connects to the different exclusion numbers we got.
 ```
+
+# Models to predict speech measure by condition
+
+# Run models
+
+```{r}
+#| label: mixed models
+
+word_count_mdl <- lmer(Word_count ~ Condition +
+                         (1 + Condition | Participant) +
+                         (1 + Condition | Item),
+                       data = gesture_tidy)
+# This converged.
+
+time_speaking_mdl <- lmer(Seconds ~ Condition +
+                         (1 + Condition | Participant) +
+                         (1 + Condition | Item),
+                       data = gesture_tidy)
+# Singular fit.
+summary(time_speaking_mdl)
+# We don't see a clear reason why this is singular.
+# Remove random slopes for participant, as reported.
+time_speaking_mdl_reduced <- lmer(Seconds ~ Condition +
+                         (1 | Participant) +
+                         (1 | Item),
+                       data = gesture_tidy)
+# No longer singular
+
+filled_pauses_mdl <- lmer(Filled_pauses ~ Condition +
+                         (1 + Condition | Participant) +
+                         (1 + Condition | Item),
+                       data = gesture_tidy)
+# Singular
+filled_pauses_mdl_reduced <- lmer(Filled_pauses ~ Condition +
+                         (1 | Participant) +
+                         (1 | Item),
+                       data = gesture_tidy)
+# Not singular
+
+deictic_mdl <- glmer(Deictic ~ Condition +
+                         (1 + Condition | Participant) +
+                         (1 + Condition | Item),
+                       data = gesture_tidy,
+                       family = 'binomial')
+# Actually did not converge. Dropping random slopes
+deictic_mdl <- glmer(Deictic ~ Condition +
+                         (1 | Participant) +
+                         (1 | Item),
+                       data = gesture_tidy,
+                       family = 'binomial')
+# This worked.
+```
+
+The maximal binomial model to predict deictic reference got the following error when it failed to converge:
+
+`Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv,  :   unable to evaluate scaled gradient Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv,  :   Model failed to converge: degenerate  Hessian with 1 negative eigenvalues`
+
+## Test significance of pairwise comparisons between levels of `condition`
+
+```{r}
+#| label: model_comparison
+
+# Using the ls_means function was not specified in the article, and we were confused. We cheated and checked the writers' script.
+table_yay <- ls_means(word_count_mdl)
+difflsmeans(word_count_mdl)
+# These functions do not show us a table with any values.
+```
+
+So far, we cannot test pairwise differences based on these models.
