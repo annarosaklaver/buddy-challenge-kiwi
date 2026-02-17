@@ -81,7 +81,17 @@ gesture_tidy <- gesture_tidy |>
          Comment,
          Include))
 
-# To do: make the column names less awful  
+# To do: make the column names less awful
+```
+
+## Check data aggregates
+
+```{r}
+#| label: gesture-aggregates
+
+# Calculate total number of participants remaining
+length(unique(gesture_tidy$Participant))
+# 49 matches the number reported.
 
 # Determine the trial counts for each condition x participant combination
 trial_counts_conditional <- table(Condition = gesture_tidy$Condition,
@@ -95,4 +105,14 @@ trial_counts_conditional |>
   summarise(mean_trials_per_participant = mean(Freq),
             min_trials_per_participant = min(Freq),
             max_trials_per_participant = max(Freq))
+
+# Why is there a min 0 from make? Let's see which participant has this number.
+trial_counts_conditional |>
+  group_by(Condition, Participant) |>
+  summarise(mean_trials_per_participant = mean(Freq),
+            min_trials_per_participant = min(Freq),
+            max_trials_per_participant = max(Freq))
+# The one case with zero trials per participant is Make condition, participant 2.
+# This likely is why our overall mean for Make is lower than the 6.50 they report.
+# But the mean trials per participant were spot-on otherwise, so I don't think they dropped participant 2. Don't know what they did.
 ```
