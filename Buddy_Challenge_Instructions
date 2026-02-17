@@ -2,9 +2,9 @@
 
 Write a reproducibility assessment for the paper's analysis (focus on the analysis that has been reported to have convergence issues)
 
-    assess whether you can analytically reproduce their analyses including descriptive numbers, graphs, and inferential results according to what they report in the paper (not following their scripts but their description in the paper);
-    assess whether you can computationally reproduce their analysis script including numbers, graphs, and inferential results (using their scripts);
-    write a report on the discrepancies between what they report in the paper, what their scripts are doing and what you can/cannot reproduce and why (and if the impact is none/minor/moderate/major on the key claim). End on an evaluation of, according to your own assessment, how trustworthy you believe their results and claims are. Write your report as a markdown file (.qmd) and include figures if you want. Write at least 1000 words (including a summary of the scientific claim in the article and how it is supported by their statistical analysis, difficulties with reproducing their findings, and your final verdict). 
+- assess whether you can analytically reproduce their analyses including descriptive numbers, graphs, and inferential results according to what they report in the paper (not following their scripts but their description in the paper);
+- assess whether you can computationally reproduce their analysis script including numbers, graphs, and inferential results (using their scripts);
+- write a report on the discrepancies between what they report in the paper, what their scripts are doing and what you can/cannot reproduce and why (and if the impact is none/minor/moderate/major on the key claim). End on an evaluation of, according to your own assessment, how trustworthy you believe their results and claims are. Write your report as a markdown file (.qmd) and include figures if you want. Write at least 1000 words (including a summary of the scientific claim in the article and how it is supported by their statistical analysis, difficulties with reproducing their findings, and your final verdict). 
 
 Each buddy group leader submits their report as a markdown (.qmd) and knitted pdf file. 
 
