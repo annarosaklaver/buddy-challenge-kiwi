@@ -83,9 +83,11 @@ gesture_tidy <- gesture_tidy |>
          Comment,
          Include,
          TimeTalking)) |>
-  # Make the column names less awful
+  # Make the column names more stylistically consistent
+  # And make them better reflect terminology used in the article
   rename(Item = Trial, # We are guessing they use 'trial' to record specific combinations of grid and dot pattern, which they refer to when modeling as 'item'
          Deictic = index.speech,
+         Time_speaking = Seconds,
          Word_count = wordcount,
          Filled_pauses = Disfluenices,
          Letters_recalled = Letters,
@@ -94,10 +96,18 @@ gesture_tidy <- gesture_tidy |>
   # Make condition labels clearer
   mutate(Condition = case_when(Condition == 'M' ~ 'Make',
                                Condition == 'G' ~ 'Gesture',
-                               Condition == 'NG' ~ 'Hands still'))
+                               Condition == 'NG' ~ 'Hands still'),
+         # Convert letters and locations recalled to numeric, so we can predict them
+         # with a linear model later
+         Letters_recalled = as.numeric(Letters_recalled),
+         Locations_recalled = as.numeric(Locations_recalled))
 ```
 
 ## Check data aggregates
+
+*'The analyzed sample came from 49 participants'* (p. 605)
+
+*'The final dataset included an average of 7.67 trials per participant in the Gesture condition (Range: 6–8), 6.50 trials per participant in the Make condition (Range: 3–8), and 7.37 trials per participant in the Hand Still condition (Range: 5–8).'* (p. 608)
 
 ```{r}
 #| label: gesture-aggregates
@@ -132,10 +142,12 @@ trial_counts_conditional |>
 
 # Models to predict speech measure by condition
 
-# Run models
+## Model Set 1
+
+*'For analysis, we first considered whether the type of trial (gesture, no gesture, or make) influenced the participants’ speech during their description and whether those differences in speech affected memory for letters or locations in the grid. We used the lme4 package (Bates et al., 2015) in R (version 4.1.0) to predict each speech measure (word count, filled pauses, time spent speaking, and deictic reference) from the fixed factor of condition. We included random effects of participant and item1 with the maximal random effects structure (intercepts and slopes by condition). If this maximal model did not converge, we dropped the random slopes.'* (p. 608)
 
 ```{r}
-#| label: mixed models
+#| label: mixed_models_1
 
 word_count_mdl <- lmer(Word_count ~ Condition +
                          (1 + Condition | Participant) +
@@ -143,7 +155,7 @@ word_count_mdl <- lmer(Word_count ~ Condition +
                        data = gesture_tidy)
 # This converged.
 
-time_speaking_mdl <- lmer(Seconds ~ Condition +
+time_speaking_mdl <- lmer(Time_speaking ~ Condition +
                          (1 + Condition | Participant) +
                          (1 + Condition | Item),
                        data = gesture_tidy)
@@ -151,7 +163,7 @@ time_speaking_mdl <- lmer(Seconds ~ Condition +
 summary(time_speaking_mdl)
 # We don't see a clear reason why this is singular.
 # Remove random slopes for participant, as reported.
-time_speaking_mdl_reduced <- lmer(Seconds ~ Condition +
+time_speaking_mdl_reduced <- lmer(Time_speaking ~ Condition +
                          (1 | Participant) +
                          (1 | Item),
                        data = gesture_tidy)
@@ -173,6 +185,7 @@ deictic_mdl <- glmer(Deictic ~ Condition +
                          (1 + Condition | Item),
                        data = gesture_tidy,
                        family = 'binomial')
+
 # Actually did not converge. Dropping random slopes
 deictic_mdl <- glmer(Deictic ~ Condition +
                          (1 | Participant) +
@@ -188,6 +201,8 @@ The maximal binomial model to predict deictic reference got the following error 
 
 ## Test significance of pairwise comparisons between levels of `condition`
 
+*'We determined significance by using the lmerTest package (Kuznetsova et al., 2017), which uses Satterthwaite’s method for approximating degrees of freedom and determining the p-value associated with the t-test of each effect, and the difflsmeans function to test pairwise differences between the three conditions.'* (p. 608-9)
+
 ```{r}
 #| label: model_comparison
 
@@ -197,4 +212,198 @@ difflsmeans(word_count_mdl)
 # These functions do not show us a table with any values.
 ```
 
-So far, we cannot test pairwise differences based on these models.
+We were generally confused by difflsmeans function, and decided to move on since this is not the section with convergence issues.
+
+## Model Set 2
+
+*'Next, we considered whether each speech measure was associated with memory for the letters or locations in the grid. To do this, we entered the measure as a fixed factor in (1) a linear mixed model predicting number of letters recalled and (2) a linear mixed model predicting number of locations recalled. In both models, we included participant and item as random effects and determined significance with the lmerTest package'* (p. 609)
+
+Our buddy group read this in two different ways. One of us thought they created a separate mixed model to test each speech measure's predictive power, x2 since we're predicting letter and location recall separately. So 8 models total. Another of us thought this meant they just ran two models, each with all four speech measures as a fixed effect. We try both options below.
+
+Note that they don't mention whether they used random slopes or just intercepts, or any convergence issues. So we'll go on the assumption that they used both, and all models should converge.
+
+### Many simple models part 1: predicting number of letters recalled correctly based on each speech measure
+
+```{r}
+#| label: mixed_models_2
+
+# Maximal models
+word_count_mdl2 <- lmer(Letters_recalled ~ Word_count +
+                        (1 + Word_count | Participant) +
+                        (1 + Word_count | Item),
+                        data = gesture_tidy)
+
+# Oho, this failed to converge. I guess we imitate what the authors did in the last
+# section, and drop random slopes. We note that this leads to increased false positive
+# rates. See 'reduced models' below.
+
+time_speaking_mdl2 <- lmer(Letters_recalled ~ Time_speaking +
+                        (1 + Time_speaking | Participant) +
+                        (1 + Time_speaking | Item),
+                        data = gesture_tidy)
+
+filled_pauses_mdl2 <- lmer(Letters_recalled ~ Filled_pauses +
+                        (1 + Filled_pauses | Participant) +
+                        (1 + Filled_pauses | Item),
+                        data = gesture_tidy)
+
+deictic_mdl2 <- lmer(Letters_recalled ~ Deictic +
+                        (1 + Deictic | Participant) +
+                        (1 + Deictic | Item),
+                        data = gesture_tidy)
+```
+
+All three of these models returned a singular fit, so we fitted models with the random slopes dropped.
+
+```{r}
+#| label: mixed_models_2_reduced
+
+# Reduced models
+
+word_count_mdl2_reduced <- lmer(Letters_recalled ~ Word_count +
+                        (1 | Participant) +
+                        (1 | Item),
+                        data = gesture_tidy)
+
+time_speaking_mdl2_reduced <- lmer(Letters_recalled ~ Time_speaking +
+                        (1 | Participant) +
+                        (1 | Item),
+                        data = gesture_tidy)
+
+filled_pauses_mdl2_reduced <- lmer(Letters_recalled ~ Filled_pauses +
+                        (1 | Participant) +
+                        (1 | Item),
+                        data = gesture_tidy)
+
+deictic_mdl2_reduced <- lmer(Letters_recalled ~ Deictic +
+                        (1 | Participant) +
+                        (1 | Item),
+                        data = gesture_tidy)
+```
+
+These models all run fine.
+
+### Many simple models part 2: predict number of locations recalled correctly based on each speech measure.
+
+```{r}
+#| label: mixed_models_3
+
+# Rinse and repeat.
+
+# Maximal models
+word_count_mdl3 <- lmer(Locations_recalled ~ Word_count +
+                        (1 + Word_count | Participant) +
+                        (1 + Word_count | Item),
+                        data = gesture_tidy)
+
+time_speaking_mdl3 <- lmer(Locations_recalled ~ Time_speaking +
+                        (1 + Time_speaking | Participant) +
+                        (1 + Time_speaking | Item),
+                        data = gesture_tidy)
+
+filled_pauses_mdl3 <- lmer(Locations_recalled ~ Filled_pauses +
+                        (1 + Filled_pauses | Participant) +
+                        (1 + Filled_pauses | Item),
+                        data = gesture_tidy)
+
+deictic_mdl3 <- lmer(Locations_recalled ~ Deictic +
+                        (1 + Deictic | Participant) +
+                        (1 + Deictic | Item),
+                        data = gesture_tidy)
+
+```
+
+This time, all models fail to converge except deictic, which runs fine. Dropped slopes for word count, time speaking, and filled pauses below.
+
+```{r}
+#| label: mixed_models_3_reduced
+
+# Reduced models
+
+word_count_mdl2_reduced <- lmer(Letters_recalled ~ Word_count +
+                        (1 | Participant) +
+                        (1 | Item),
+                        data = gesture_tidy)
+
+time_speaking_mdl2_reduced <- lmer(Letters_recalled ~ Time_speaking +
+                        (1 | Participant) +
+                        (1 | Item),
+                        data = gesture_tidy)
+
+filled_pauses_mdl2_reduced <- lmer(Letters_recalled ~ Filled_pauses +
+                        (1 | Participant) +
+                        (1 | Item),
+                        data = gesture_tidy)
+```
+
+These models run.
+
+### Two complex models: predict letters based on all speech measures, then the same for locations
+
+```{r}
+#| label: mixed_models_4
+
+# Part 1: predict letter recall
+
+letter_prediction_supermaxed <-
+  lmer(Letters_recalled ~ Word_count +
+                          Time_speaking +
+                          Filled_pauses +
+                          Deictic +
+                          (1 + Word_count + Time_speaking + Filled_pauses + Deictic | Participant) +
+                          (1 + Word_count + Time_speaking + Filled_pauses + Deictic | Item),
+        data = gesture_tidy)
+
+# Singular fit. Drop random slopes.
+
+letter_prediction_supermaxed_reduced <-
+  lmer(Letters_recalled ~ Word_count +
+                          Time_speaking +
+                          Filled_pauses +
+                          Deictic +
+                          (1 | Participant) +
+                          (1 | Item),
+       data = gesture_tidy)
+
+# This runs.
+
+# Part 2: predict location recall
+
+location_prediction_supermaxed <-
+  lmer(Locations_recalled ~ Word_count +
+                          Time_speaking +
+                          Filled_pauses +
+                          Deictic +
+                          (1 + Word_count + Time_speaking + Filled_pauses + Deictic | Participant) +
+                          (1 + Word_count + Time_speaking + Filled_pauses + Deictic | Item),
+        data = gesture_tidy)
+
+# Fails to converge. Drop random slopes.
+
+location_prediction_supermaxed_reduced <-
+  lmer(Locations_recalled ~ Word_count +
+                          Time_speaking +
+                          Filled_pauses +
+                          Deictic +
+                          (1 | Participant) +
+                          (1 | Item),
+       data = gesture_tidy)
+
+# This runs.
+```
+
+### Determine significance
+
+*'determined significance with the lmerTest package' (609)*
+
+Again, this is so vague we have no idea how they actually 'determined significance'. Moving on for now.
+
+## Model Set 3
+
+*'Finally, we considered whether condition (Gesture, Hands Still, and Make) affected cognitive load. We conducted a separate series of linear mixed-effects models to predict memory for letters and memory for locations. In each series, we first fit a full model that included condition and all four speech variables as fixed factors as well as participant and item as random effects. We began with the maximal model possible, including random intercepts and slopes by condition for both participant and item, and dropped the random slopes if the maximal model did not converge. We then computed a set of 14 nested models, encompassing all combinations of one, two, or three speech variables in addition to condition, and each including the same fixed and random effects structure as the full model. We compared the models using the Akaike information criterion (AIC), with lower AIC values indicating better model fit. We then chose the best-fitting model and used the difflsmeans function in the lmerTest package to determine pairwise differences between conditions in that model.'* (p. 609)
+
+```{r}
+#| label: mixed_models_5
+
+
+```
