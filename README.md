@@ -2,7 +2,7 @@
 This is a repository for the buddy challenge assignment of LING4136 at UiO, group kiwi.
 ---
 ## OG data and scripts
-Contains the original script and data used in the selected paper (Hostetter & Bahl, 2023). This data and analysis code are available at https://osf.io/ 57cdw/?view_only=dd7a46754c274608a896549a2f38168e.
+Contains the original script and data used in the selected paper (Hostetter & Bahl, 2023). This data and analysis code are available at https://osf.io/57cdw/?view_only=dd7a46754c274608a896549a2f38168e.
 - `AGI Analyses revision.R`
 - `AGI Study 2 data.csv`
 - `AGI Study 1 data.csv`
