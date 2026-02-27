@@ -101,6 +101,9 @@ gesture_tidy <- gesture_tidy |>
          # with a linear model later
          Letters_recalled = as.numeric(Letters_recalled),
          Locations_recalled = as.numeric(Locations_recalled))
+
+# make condition a factor
+gesture_tidy$Condition <- as.factor(gesture_tidy$Condition)
 ```
 
 ## Check data aggregates
@@ -408,6 +411,8 @@ Most important notes:
 
 -   the 'best' models for both letters and locations found here match the ones reported in the paper
 
+-   pairwise differences match with what is reported in the paper, further significance testing is not mentioned in methods description so has not been carried out here.
+
 **Letters Models**
 
 ```{r}
@@ -596,6 +601,9 @@ best_mdl_index <- which.min(letter_AIC_scores)
 # print best fitting model with the index
 print(letter_mdls[best_mdl_index])
   # this is the same best-fitting model that they report in the paper
+
+# testing pairwise differences between conditions
+difflsmeans(letter_mdls[[best_mdl_index]])
 ```
 
 **Locations Models**
@@ -786,4 +794,7 @@ loc_best_mdl_index <- which.min(location_AIC_scores)
 # print best fitting model with the index
 print(location_mdls[loc_best_mdl_index])
   # this is the same best-fitting model that they report in the paper
+
+# testing pairwise differences between conditions
+difflsmeans(location_mdls[[loc_best_mdl_index]])
 ```
