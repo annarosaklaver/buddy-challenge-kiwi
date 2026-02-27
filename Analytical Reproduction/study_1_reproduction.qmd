@@ -101,6 +101,9 @@ gesture_tidy <- gesture_tidy |>
          # with a linear model later
          Letters_recalled = as.numeric(Letters_recalled),
          Locations_recalled = as.numeric(Locations_recalled))
+
+# make condition a factor
+gesture_tidy$Condition <- as.factor(gesture_tidy$Condition)
 ```
 
 ## Check data aggregates
@@ -402,8 +405,396 @@ Again, this is so vague we have no idea how they actually 'determined significan
 
 *'Finally, we considered whether condition (Gesture, Hands Still, and Make) affected cognitive load. We conducted a separate series of linear mixed-effects models to predict memory for letters and memory for locations. In each series, we first fit a full model that included condition and all four speech variables as fixed factors as well as participant and item as random effects. We began with the maximal model possible, including random intercepts and slopes by condition for both participant and item, and dropped the random slopes if the maximal model did not converge. We then computed a set of 14 nested models, encompassing all combinations of one, two, or three speech variables in addition to condition, and each including the same fixed and random effects structure as the full model. We compared the models using the Akaike information criterion (AIC), with lower AIC values indicating better model fit. We then chose the best-fitting model and used the difflsmeans function in the lmerTest package to determine pairwise differences between conditions in that model.'* (p. 609)
 
+Most important notes:
+
+-   strictly following the description here, the full model with all four speech variables as predictors is not considered as a contender for the best fit (*'a set of 14 nested models'*)
+
+-   the 'best' models for both letters and locations found here match the ones reported in the paper
+
+-   pairwise differences match with what is reported in the paper, further significance testing is not mentioned in methods description so has not been carried out here.
+
+**Letters Models**
+
 ```{r}
 #| label: mixed_models_5
 
+# full model with all predictors and maximal random effects
+letter_full_mdl <- lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Time_speaking +
+                            Filled_pauses +
+                            Deictic +
+                            # random slopes by condition and intercepts
+                            (1 + Condition | Participant) +
+                            (1 + Condition | Item),
+                          data = gesture_tidy)
+# singular fit, drop slopes
 
+letter_full_mdl_int <- lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Time_speaking +
+                            Filled_pauses +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy)
+# this converges
+
+# now to compile a list of all possible combinations of predictors... (14 models)
+letter_mdls <- list(# 3 predictors: remove deictic
+                    lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Time_speaking +
+                            Filled_pauses +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 3 predictors: remove filled pauses
+                    lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Time_speaking +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 3 predictors: remove time speaking
+                    lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Filled_pauses +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 3 predictors: remove word count
+                    lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Time_speaking +
+                            Filled_pauses +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 2 predictors: word count and time speaking
+                    lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Time_speaking +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 2 predictors: word count and filled pauses
+                    lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Filled_pauses +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 2 predictors: word count and deictic
+                    lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 2 precitors: time speaking and filled pauses
+                    lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Time_speaking +
+                            Filled_pauses +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 2 predictors: time speaking and deictic
+                    lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Time_speaking +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 2 predictors: filled pauses and deictic
+                    lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Filled_pauses +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 1: word count
+                    lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 1: time speaking
+                    lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Time_speaking +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 1: filled pauses
+                    lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Filled_pauses +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 1: deictic
+                    lmer(Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy))
+
+# create empty list to store letter AICs
+letter_AIC_scores <- list()
+
+# calculate AICs for all models and append to the list 
+for (x in letter_mdls) {
+  letter_AIC_scores = append(letter_AIC_scores, AIC(x))
+}
+
+# find lowest AIC score in the list
+best_mdl_index <- which.min(letter_AIC_scores)
+
+# print best fitting model with the index
+print(letter_mdls[best_mdl_index])
+  # this is the same best-fitting model that they report in the paper
+
+# testing pairwise differences between conditions
+difflsmeans(letter_mdls[[best_mdl_index]])
+```
+
+**Locations Models**
+
+```{r}
+#| label: mixed_models_6
+
+# full model with all predictors and maximal random effects
+location_full_mdl <- lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Time_speaking +
+                            Filled_pauses +
+                            Deictic +
+                            # random slopes by condition and intercepts
+                            (1 + Condition | Participant) +
+                            (1 + Condition | Item),
+                          data = gesture_tidy)
+# singular fit, drop slopes
+
+location_full_mdl_int <- lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Time_speaking +
+                            Filled_pauses +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy)
+# this converges
+
+# now to compile a list of all possible combinations of predictors... (14 models)
+location_mdls <- list(# 3 predictors: remove deictic
+                    lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Time_speaking +
+                            Filled_pauses +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 3 predictors: remove filled pauses
+                    lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Time_speaking +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 3 predictors: remove time speaking
+                    lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Filled_pauses +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 3 predictors: remove word count
+                    lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Time_speaking +
+                            Filled_pauses +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 2 predictors: word count and time speaking
+                    lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Time_speaking +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 2 predictors: word count and filled pauses
+                    lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Filled_pauses +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 2 predictors: word count and deictic
+                    lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 2 precitors: time speaking and filled pauses
+                    lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Time_speaking +
+                            Filled_pauses +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 2 predictors: time speaking and deictic
+                    lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Time_speaking +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 2 predictors: filled pauses and deictic
+                    lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Filled_pauses +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 1: word count
+                    lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 1: time speaking
+                    lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Time_speaking +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 1: filled pauses
+                    lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Filled_pauses +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy),
+                    # 1: deictic
+                    lmer(Locations_recalled ~ 
+                            # predictors
+                            Condition +
+                            Deictic +
+                            # random intercepts
+                            (1 | Participant) +
+                            (1 | Item),
+                          data = gesture_tidy))
+
+# create empty list to store letter AICs
+location_AIC_scores <- list()
+
+# calculate AICs for all models and append to the list 
+for (x in location_mdls) {
+  location_AIC_scores = append(location_AIC_scores, AIC(x))
+}
+
+# find lowest AIC score in the list
+loc_best_mdl_index <- which.min(location_AIC_scores)
+
+# print best fitting model with the index
+print(location_mdls[loc_best_mdl_index])
+  # this is the same best-fitting model that they report in the paper
+
+# testing pairwise differences between conditions
+difflsmeans(location_mdls[[loc_best_mdl_index]])
 ```
