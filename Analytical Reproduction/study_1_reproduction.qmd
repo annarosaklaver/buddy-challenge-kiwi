@@ -338,7 +338,7 @@ filled_pauses_mdl2_reduced <- lmer(Letters_recalled ~ Filled_pauses +
 
 These models run.
 
-### Two complex models: predict letters based on all speech measures, then the same for locations
+### Two complicated models: predict letters based on all speech measures, then the same for locations
 
 ```{r}
 #| label: mixed_models_4
