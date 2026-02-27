@@ -1,6 +1,6 @@
 # Codebook
 
-## Original Variables
+## Variables in original dataset 
 - Participant - Participant id
 - Script - ? (unclear to us what this is)
 - Trial - trial id - unique trial items (not what we would call trial, actually item)
@@ -22,3 +22,16 @@
 - Location - number of letter locations correctly recalled by participant (scored 0-5)
 - Both - number of letter location combinations correctly recalled by particpant (scored 0-5)
 - Include - Trial included in analysis (y/n)
+
+## Updated variables used in our scripts
+- Participant – unique participant ID (n=49)
+- Item – stimulus item identifier (represents grid–pattern pairing). Note: formerly Trial
+- Condition – manual behaviour during description task (Gesture, Make, Hands still). Note: renamed original codes (G, M, NG).
+- Word_count – dumber of words spoken during the trial
+- Time_speaking – duration of speech in seconds
+- Filled_pauses – number of speech disfluencies in trial. Note: formally ‘Disfluenices’
+- Deictic – deictic speech present (coded 0, 1, 2, NA) Note: formally ‘Index.speech’
+- Letters_recalled – number of letters correctly recalled (0–5)
+- Locations_recalled – number of letter locations correctly recalled (0–5). Note: formally ‘locations’
+- Total_recalled – number of correct letter–location combinations recalled (0–5). Note: formally ‘both’
+- Include - include trial in analysis (y/n)
