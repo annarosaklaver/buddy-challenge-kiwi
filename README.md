@@ -22,4 +22,7 @@ Contains the revised version of the original script used to assess the computati
 Contains the additional resources used for the project
 - `bibliography.bib`: contains the bibliography files
 - `Hostetter_Bahl_2023.pdf`: contains the journal article used for the buddy challenge assessment (Hostetter & Bahl, 2023).
-- `Buddy_Challenge_Instructions`: contains the instructions for the budy challenge assessment. 
+- `Buddy_Challenge_Instructions`: contains the instructions for the budy challenge assessment.
+- `sessioninfo`: contains session information for reproducability assessment.
+- `codebook`: contains codebook for original data and our updated scripts.
+
