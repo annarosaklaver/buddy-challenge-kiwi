@@ -1,0 +1,24 @@
+# Codebook
+
+## Original Variables
+- Participant - Participant id
+- Script - ? (unclear to us what this is)
+- Trial - trial id - unique trial items (not what we would call trial, actually item)
+- Condition - make, gesture, and no gesture condition (M - make, G - gesture, NG - no gesture)
+- Start.time - The start time of the speech
+- Transcript - a transcript of what the participant said during trial
+- Index.words - Count of diectic references (coded 0, 1, 2, NA). Also uses 'indexical words' in oringinal report.
+- Index.speech - Inexicing words used (coded Binary yes, no)
+- End.time - End time of trial for participant speech
+- Second - duration of trial in seconds
+- Word count - number of words spoken in a trial 
+- Disfluencies - number of speech disfluencies? (In text written as filled pauses) 
+- Timetalking - duration of time speaking as a character vector
+- Gesture - Gesture made description - unclear very opaque 
+- Iconic - number of iconic gestures
+- Beats - number of beats gesture  
+- Comments - researchers comments - might just be in excluded trials 
+- Letters - number of letters remembered correctly by participant (scored 0-5)
+- Location - number of letter locations correctly recalled by participant (scored 0-5)
+- Both - number of letter location combinations correctly recalled by particpant (scored 0-5)
+- Include - Trial included in analysis (y/n)
