@@ -1,0 +1,165 @@
+---
+title: "bayesian_reproduction"
+format: html
+editor: visual
+date: 2026-03-18
+author: Anna Rosa Klaver, Are Markku Alanen Tjihkkom, Jemima Agnew, Liradie Allen, Naomi Takizawa
+execute:
+  error: false
+  warning: false
+  message: false
+  cache: false
+---
+
+# Preamble: Loading packages and configuration
+
+```{r}
+#| label: data_and_libraries
+#| echo: false
+
+# just run this code chunk
+# function to ignoring the setting of the relative path below when knitting
+run_if_not_knitting <- function(expr) {
+  if (!isTRUE(getOption("knitr.in.progress"))) {
+    eval(expr)
+  }
+}
+
+# nifty code using the pacman package
+# it checks if the packages specified below are installed, if not, they will be installed, if yes, they will be loaded
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(rstudioapi, tidyverse, tidybayes, brms, bayestestR, modelr)
+
+# set the current working directory to the one where this file is
+run_if_not_knitting(current_working_dir <- dirname(rstudioapi::getActiveDocumentContext()$path))
+run_if_not_knitting(setwd(current_working_dir))
+```
+
+# Article
+
+Hostetter, A. B., & Bahl, S. (2023). Comparing the cognitive load of gesture and action production: A dual-task study. *Language and Cognition*, *15*(3), 601–621. <https://doi.org/10.1017/langcog.2023.23>
+
+# Task
+
+Run a series of Bayesian models equivalent to the critical model in the original article that originally did not converge:
+
+(a) run the closest equivalent of their analysis (i.e. same structure but using flat priors)
+(b) run a proper model with proper, weakly informative priors and justify your prior choices; interpret the results relative to the research question by interpreting the posteriors relative to zero; write up the results and write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). add the report to your GitHub Repo from Part 3.
+
+# Data Preparation
+
+Repeating our data-tidying from the analytical reproduction, using a new copy of the data CSV.
+
+## Load the data
+
+```{r}
+#| label: load-gesture
+
+# Load a copy of the original data into a dataframe
+gesture <- read_csv('bayesian_repro_data.csv')
+
+# Have a look
+head(gesture)
+```
+
+## Tidy the data
+
+```{r}
+#| label: tidy-gesture
+
+# Exclude the data in which participant didn't follow the instructions
+gesture_tidy <- gesture |>
+  filter(Include == 'y')
+
+# Calculate proportion of data excluded
+prop_excluded <- 1 - (nrow(gesture_tidy)/nrow(gesture))
+prop_excluded
+# This gets 10.8%, which is slightly more then the 10.6% the authors reported.
+# We have discarded 127 trials, which is 2 more than the 125 they report in total.
+
+# Remove columns we will not use
+gesture_tidy <- gesture_tidy |>
+  select(- c(Script,
+             `Index Words`,
+            `Start Time`,
+              Transcript,
+         `End Time`,
+         Comment,
+         Include,
+         TimeTalking)) |>
+  # Make the column names more stylistically consistent
+  # And make them better reflect terminology used in the article
+  rename(Item = Trial, # We are guessing they use 'trial' to record specific combinations of grid and dot pattern, which they refer to when modeling as 'item'
+         Deictic = index.speech,
+         Time_speaking = Seconds,
+         Word_count = wordcount,
+         Filled_pauses = Disfluenices,
+         Letters_recalled = Letters,
+         Locations_recalled = Locations,
+         Total_recalled = Both) |>
+  # Make condition labels clearer
+  mutate(Condition = case_when(Condition == 'M' ~ 'Make',
+                               Condition == 'G' ~ 'Gesture',
+                               Condition == 'NG' ~ 'Hands still'),
+         # Convert letters and locations recalled to numeric, so we can predict them
+         # with a linear model later
+         Letters_recalled = as.numeric(Letters_recalled),
+         Locations_recalled = as.numeric(Locations_recalled),
+         # make condition a factor, for difflsmeans later
+         Condition = as.factor(Condition))
+```
+
+# a) run the closest equivalent of their analysis (i.e. same structure but using flat priors)
+
+Focusing on the final part of the article's study 1 analysis, since it actually addresses their main research question.
+
+## Models predicting recall by condition
+
+### Letters models
+
+```{r}
+#| label: models1
+
+letter_formula <- Letters_recalled ~ 
+                            # predictors
+                            Condition +
+                            Word_count +
+                            Time_speaking +
+                            Filled_pauses +
+                            Deictic +
+                            # random slopes and intercepts by condition
+                            (1 + Condition | Participant) +
+                            (1 + Condition | Item)
+
+# Check what we need to set priors for
+get_prior(letter_formula, gesture_tidy)
+
+# Set flat priors for intercept and predictors.
+# THIS PART IS CONFUSING AND VERY MUCH UNFINISHED.
+flat_priors_letter <- c(
+  # Text copied from Jo:
+  # We do not manually specify priors for the fixed effects (class = "b");
+  # brms defaults are the closest practical analogue to flat/diffuse priors here.
+  # Random-effect standard deviations need proper priors in a Bayesian MLM.
+  # A broad Student-t prior is weakly informative and computationally safer than a bounded uniform prior.
+  prior(student_t(df = 3, location = 0, scale = 2.5,
+        class = 'sd')),
+  # Residual standard deviation also needs a proper positive prior.
+ # Again, we use a broad weakly informative Student-t.
+  prior(student_t(df = 3, location = 0, scale = 2.5), class = "sigma"))
+  
+
+# Run bayesian model with flat priors
+xmdl_letter <- brm(letter_formula,
+                   family = gaussian(),
+                   prior = flat_priors_letter,
+                   data = gesture_tidy,
+                   # Save model in a nearby file
+                   file = "../../models/letter_mdl_flat.RDS",
+                   chains = 4,
+                   cores = 4, 
+                   iter = 2000,
+                   warmup = 1000,
+                   thin = 1,
+                   seed = 42)
+```
