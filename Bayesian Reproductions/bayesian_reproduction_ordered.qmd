@@ -1,0 +1,311 @@
+---
+title: "bayesian_reproduction"
+format: html
+editor: visual
+date: 2026-03-18
+author: Anna Rosa Klaver, Are Markku Alanen Tjihkkom, Jemima Agnew, Liradie Allen, Naomi Takizawa
+execute:
+  error: false
+  warning: false
+  message: false
+  cache: false
+---
+
+# Preamble: Loading packages and configuration
+
+```{r}
+#| label: data_and_libraries
+#| echo: false
+
+# just run this code chunk
+# function to ignoring the setting of the relative path below when knitting
+run_if_not_knitting <- function(expr) {
+  if (!isTRUE(getOption("knitr.in.progress"))) {
+    eval(expr)
+  }
+}
+
+# nifty code using the pacman package
+# it checks if the packages specified below are installed, if not, they will be installed, if yes, they will be loaded
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(rstudioapi, tidyverse, tidybayes, brms, bayestestR, bayesplot, modelr)
+
+# set the current working directory to the one where this file is
+run_if_not_knitting(current_working_dir <- dirname(rstudioapi::getActiveDocumentContext()$path))
+run_if_not_knitting(setwd(current_working_dir))
+```
+
+# Article
+
+Hostetter, A. B., & Bahl, S. (2023). Comparing the cognitive load of gesture and action production: A dual-task study. *Language and Cognition*, *15*(3), 601–621. <https://doi.org/10.1017/langcog.2023.23>
+
+# Task
+
+Run a series of Bayesian models equivalent to the critical model in the original article that originally did not converge:
+
+(a) run the closest equivalent of their analysis (i.e. same structure but using flat priors)
+(b) run a proper model with proper, weakly informative priors and justify your prior choices; interpret the results relative to the research question by interpreting the posteriors relative to zero; write up the results and write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). add the report to your GitHub Repo from Part 3.
+
+# Data Preparation
+
+Repeating our data-tidying from the analytical reproduction, using a new copy of the data CSV.
+
+## Load the data
+
+```{r}
+#| label: load-gesture
+
+# Load a copy of the original data into a dataframe
+gesture <- read_csv('bayesian_repro_data.csv')
+
+# Have a look
+head(gesture)
+```
+
+## Tidy the data
+
+```{r}
+#| label: tidy-gesture
+
+# Exclude the data in which participant didn't follow the instructions
+gesture_tidy <- gesture |>
+  filter(Include == 'y')
+
+# Remove columns we will not use
+gesture_tidy <- gesture_tidy |>
+  select(- c(Script,
+             `Index Words`,
+            `Start Time`,
+              Transcript,
+         `End Time`,
+         Comment,
+         Include,
+         TimeTalking)) |>
+  # Make the column names more stylistically consistent
+  # And make them better reflect terminology used in the article
+  rename(Item = Trial, # We are guessing they use 'trial' to record specific combinations of grid and dot pattern, which they refer to when modeling as 'item'
+         Deictic = index.speech,
+         Time_speaking = Seconds,
+         Word_count = wordcount,
+         Filled_pauses = Disfluenices,
+         Letters_recalled = Letters,
+         Locations_recalled = Locations,
+         Total_recalled = Both) |>
+  # Make condition labels clearer
+  mutate(Condition = case_when(Condition == 'M' ~ 'Make',
+                               Condition == 'G' ~ 'Gesture',
+                               Condition == 'NG' ~ 'Hands still'))
+         # Convert letters and locations recalled to numeric, so we can predict them
+         # with a linear model later
+         # make condition a factor, for difflsmeans later
+         # |>
+
+
+gesture_tidy <- gesture_tidy |>
+  mutate(Letters_recalled = as.factor(Letters_recalled)) |>
+  mutate(Locations_recalled = as.factor(Locations_recalled)) |>
+  mutate(Condition = as.factor(Condition))
+           
+
+
+gesture_tidy$Letters_recalled <- ordered(gesture_tidy$Letters_recalled, levels = c("0", "1", "2", "3", "4", "5"))
+
+gesture_tidy$Locations_recalled <- ordered(gesture_tidy$Locations_recalled, levels = c("0", "1", "2", "3", "4", "5"))
+
+# Contrast code
+contrasts(gesture_tidy$Letters_recalled) <- contr.sum(6)
+contrasts(gesture_tidy$Locations_recalled) <- contr.sum(6)
+contrasts(gesture_tidy$Condition) <- contr.sum(3)
+
+
+
+```
+
+# a) run the closest equivalent of their analysis (i.e. same structure but using flat priors)
+
+Focusing on the final part of the article's study 1 analysis, since it actually addresses their main research question.
+
+```{r}
+#| label: model formulas
+
+# set model formulas for final two models
+
+letters_formula <- bf(Letters_recalled ~                          
+                       Condition +                          
+                       Filled_pauses +                          
+                       (1 + Condition | Participant) +                      
+                       (1 + Condition | Item))  
+
+
+locations_formula <- bf(Locations_recalled ~                            
+                          Condition +                            
+                          Filled_pauses +                            
+                          Deictic +                            
+                          (1 + Condition | Participant) +                       
+                          (1 + Condition | Item))  
+# check priors 
+get_prior(letters_formula, gesture_tidy)  
+
+get_prior(locations_formula, gesture_tidy)
+
+  # priors are functionally identical for both models, so we will be using one set of priors for letters and locations models 
+```
+
+## Flat prior models
+
+```{r}
+#| label: models1 
+
+# specify uniform priors 
+priors_flat <- c(# System would prefer we specify argument `lb` & `ub` to make explicit lower and upper bounds. Also for class `b`.
+                    prior(uniform(0,5), class  = 'Intercept'),  
+                    # `b` priors are flat by default apparently, but still
+                    prior(uniform(-5, 5), class = 'b'),
+                    # `sd` priors describe random effects
+                    prior(uniform(-5, 5), class = 'sd'),
+                    # This also seems to be the default, but we state it explicitly
+                    prior(lkj(1), class = 'cor'))  
+
+# run letters model 
+letters_mdl_flat <- brm(letters_formula,                    
+                   family = gaussian(),                    
+                   prior = letters_priors,                    
+                   data = gesture_tidy,
+                   file = 'models/letters_mdl_flat.RDS',
+                   # MCMC specs:                    
+                   chains = 4, cores = 4,                    
+                   iter = 2000, warmup = 1000,                    
+                   thin = 1, seed = 16)  
+
+# model output 
+letters_mdl_flat
+
+# run locations model 
+locations_mdl_flat <- brm(locations_formula,                    
+                     family = gaussian(),                    
+                     prior = locations_priors,                    
+                     data = gesture_tidy,    
+                     file = 'models/locations_mdl_flat.RDS',
+                     # MCMC specs:                    
+                     chains = 4, cores = 4,                    
+                     iter = 2000, warmup = 1000,                    
+                     thin = 1, seed = 16)  
+
+# model output 
+locations_mdl_flat
+```
+
+# b.1) Run a proper model with proper, weakly informative priors and justify your prior choices
+
+```{r}
+#| label: models3
+
+# Set weakly informative priors for intercept and predictors.
+priors_informative <- 
+  c(prior(normal(3, 3), class = 'Intercept'),
+    prior(normal(0, 3), class = 'b'),
+    prior(normal(0, 3), class = 'sd'),
+    prior(lkj(1), class = 'cor'),
+    prior(normal(0, 3), class = "sigma"))
+  # Text copied from Jo:
+  # We do not manually specify priors for the fixed effects (class = "b");
+  # brms defaults are the closest practical analogue to flat/diffuse priors here.
+  # Random-effect standard deviations need proper priors in a Bayesian MLM.
+  # A broad Student-t prior is weakly informative and computationally safer than a bounded uniform prior.
+  
+  # Residual standard deviation also needs a proper positive prior.
+ # Again, we use a broad weakly informative Student-t.
+  
+
+# Run bayesian model with weakly informative priors
+letters_model_informative <-
+  brm(letters_formula,
+       family = gaussian(),
+       prior = priors_informative,
+       data = gesture_tidy,
+       # Save model in a nearby file
+       file = "models/letters_mdl_informative.RDS",
+       chains = 4, cores = 4, 
+       iter = 2000, warmup = 1000,
+       thin = 1, seed = 16)
+
+letters_model_informative
+
+locations_model_informative <- 
+  brm(locations_formula,
+       family = gaussian(),
+       prior = priors_informative,
+       data = gesture_tidy,
+       # Save model in a nearby file
+       file = "models/locations_mdl_informative.RDS",
+       chains = 4, cores = 4, 
+       iter = 2000, warmup = 1000,
+       thin = 1, seed = 16)
+
+locations_model_informative
+```
+
+# b.2) Interpret the results relative to the research question by interpreting the posteriors relative to zero
+
+```{r}
+
+pp_check(letters_model_informative, ndraws = 100)
+
+pp_check(locations_model_informative, ndraws = 100)
+
+mcmc_plot(letters_model_informative, type = 'trace')
+mcmc_plot(locations_model_informative, type = 'trace')
+
+# Shit goes kinda flimpy over there.
+
+
+mcmc_dens_overlay(letters_model_informative)
+
+# No. Not legible. For our human eyes anyway.
+
+p_direction(letters_model_informative)
+p_direction(locations_model_informative)
+
+# Plot the posterior
+
+letters_model_informative |> 
+  spread_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses) |> 
+  gather_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses) |>
+  ggplot(aes(x = .value)) +
+  stat_halfeye(fill = '#756bb1') +
+  geom_vline(xintercept = 0, lty = 'dashed') +
+  geom_density(fill = "#bcbddc", alpha = 0.5) +
+  facet_wrap(~ .variable, scales = "free") +
+  labs(
+    x = "Posterior slope",
+    y = "Density",
+    title = "Distribution of posterior") +
+  theme_minimal()
+
+
+# Calculating Bayes Factor
+
+posteriors <- xmdl_sim_sqrt |> 
+  spread_draws(b_Sem1, b_Phon1, `b_Sem1:Phon1`) |> 
+  select(b_Sem1, b_Phon1, `b_Sem1:Phon1`)
+
+xmdl_sim_sqrt_priors <- brm(sqrt_dist ~ Sem * Phon,
+            family = gaussian(),
+            prior = my_priors,
+            sample_prior = "only",
+            data = sim,
+            chains = 4,
+            cores = 4, 
+            iter = 2000,
+            warmup = 1000,
+            thin = 1,
+            seed = 42)
+
+priors <- xmdl_sim_sqrt_priors |> 
+  spread_draws(b_Sem1, b_Phon1, `b_Sem1:Phon1`) |> 
+  select(b_Sem1, b_Phon1, `b_Sem1:Phon1`)
+
+bayesfactor_parameters(posteriors, priors, direction = "two-sided", null = 0)
+```
+
+# write up the results and write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). add the report to your GitHub Repo from Part 3.
