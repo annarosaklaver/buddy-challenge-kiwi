@@ -163,3 +163,76 @@ xmdl_letter <- brm(letter_formula,
                    thin = 1,
                    seed = 42)
 ```
+
+## Bayesian Reanalysis of final letters and locations models
+
+**Letters Model: Uniform priors**
+
+```{r}
+#| label: mixed_models_5  
+#| 
+# full random effects structure for the model selected in the final part of the og analysis 
+
+etters_formula <- bf(Letters_recalled ~                          
+                       Condition +                          
+                       Filled_pauses +                          
+                       (1 + Condition | Participant) +                      
+                       (1 + Condition | Item))  
+# check priors 
+get_prior(letters_formula, gesture_tidy)  
+
+# specify uniform priors 
+letters_priors <- c(prior(uniform(0,5), class  = 'Intercept'),                
+                    prior(uniform(-5, 5), class = 'b'),                     
+                    prior(uniform(-5, 5), class = 'sd'),                     
+                    prior(lkj(1), class = 'cor'))  
+
+# run model 
+letters_mdl <- brm(letters_formula,                    
+                   family = gaussian(),                    
+                   prior = letters_priors,                    
+                   data = gesture_tidy,                    
+                   # MCMC specs:                    
+                   chains = 4, cores = 4,                    
+                   iter = 2000, warmup = 1000,                    
+                   thin = 1, seed = 16)  
+
+# model output 
+letters_mdl
+```
+
+**Locations Model: Uniform priors**
+
+```{r}
+#| label: mixed_models_6  
+
+# full random effects structure for the model selected in the final part of the og analysis 
+locations_formula <- bf(Locations_recalled ~                            
+                          Condition +                            
+                          Filled_pauses +                            
+                          Deictic +                            
+                          (1 + Condition | Participant) +                       
+                          (1 + Condition | Item))  
+
+# check priors 
+get_prior(locations_formula, gesture_tidy)  
+
+# specify uniform priors 
+locations_priors <- c(prior(uniform(0,5), class  = 'Intercept'),              
+                      prior(uniform(-5, 5), class = 'b'),                     
+                      prior(uniform(-5, 5), class = 'sd'),                    
+                      prior(lkj(1), class = 'cor'))  
+
+# run model 
+locations_mdl <- brm(locations_formula,                    
+                     family = gaussian(),                    
+                     prior = locations_priors,                    
+                     data = gesture_tidy,                    
+                     # MCMC specs:                    
+                     chains = 4, cores = 4,                    
+                     iter = 2000, warmup = 1000,                    
+                     thin = 1, seed = 16)  
+
+# model output 
+locations_mdl
+```
