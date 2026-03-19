@@ -115,28 +115,81 @@ Focusing on the final part of the article's study 1 analysis, since it actually 
 
 ## Models predicting recall by condition
 
-### Letters models
+### Letters Model: Uniform priors
 
 ```{r}
-#| label: models1
+#| label: models1 
+#| 
+# full random effects structure for the model selected in the final part of the og analysis 
 
-letter_formula <- Letters_recalled ~ 
-                            # predictors
-                            Condition +
-                            Word_count +
-                            Time_speaking +
-                            Filled_pauses +
-                            Deictic +
-                            # random slopes and intercepts by condition
-                            (1 + Condition | Participant) +
-                            (1 + Condition | Item)
+letters_formula <- bf(Letters_recalled ~                          
+                       Condition +                          
+                       Filled_pauses +                          
+                       (1 + Condition | Participant) +                      
+                       (1 + Condition | Item))  
+# check priors 
+get_prior(letters_formula, gesture_tidy)  
 
-# Check what we need to set priors for
-get_prior(letter_formula, gesture_tidy)
+# specify uniform priors 
+priors_flat <- c(# System would prefer we specify argument `lb` & `ub` to make explicit lower and upper bounds. Also for class `b`.
+                    prior(uniform(0,5), class  = 'Intercept'),  
+                    # `b` priors are flat by default apparently, but still
+                    prior(uniform(-5, 5), class = 'b'),
+                    # `sd` priors describe random effects
+                    prior(uniform(-5, 5), class = 'sd'),
+                    # This also seems to be the default, but we state it explicitly
+                    prior(lkj(1), class = 'cor'))  
 
-# Set flat priors for intercept and predictors.
-# THIS PART IS CONFUSING AND VERY MUCH UNFINISHED.
-flat_priors_letter <- c(
+# run model 
+letters_mdl_flat <- brm(letters_formula,                    
+                   family = gaussian(),                    
+                   prior = letters_priors,                    
+                   data = gesture_tidy,
+                   file = 'models/letters_mdl_flat.RDS',
+                   # MCMC specs:                    
+                   chains = 4, cores = 4,                    
+                   iter = 2000, warmup = 1000,                    
+                   thin = 1, seed = 16)  
+
+# model output 
+letters_mdl_flat
+```
+
+### Locations Model: Uniform priors
+
+```{r}
+#| label: models2 
+
+# full random effects structure for the model selected in the final part of the og analysis 
+locations_formula <- bf(Locations_recalled ~                            
+                          Condition +                            
+                          Filled_pauses +                            
+                          Deictic +                            
+                          (1 + Condition | Participant) +                       
+                          (1 + Condition | Item))  
+
+# run model 
+locations_mdl_flat <- brm(locations_formula,                    
+                     family = gaussian(),                    
+                     prior = locations_priors,                    
+                     data = gesture_tidy,    
+                     file = 'models/locations_mdl_flat.RDS',
+                     # MCMC specs:                    
+                     chains = 4, cores = 4,                    
+                     iter = 2000, warmup = 1000,                    
+                     thin = 1, seed = 16)  
+
+# model output 
+locations_mdl_flat
+```
+
+# b) run a proper model with proper, weakly informative priors and justify your prior choices; interpret the results relative to the research question by interpreting the posteriors relative to zero; write up the results and write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). add the report to your GitHub Repo from Part 3.
+
+```{r}
+#| label: models3
+
+# Set weakly informative priors for intercept and predictors.
+priors_letters_informative <- c(
   # Text copied from Jo:
   # We do not manually specify priors for the fixed effects (class = "b");
   # brms defaults are the closest practical analogue to flat/diffuse priors here.
@@ -149,90 +202,18 @@ flat_priors_letter <- c(
   prior(student_t(df = 3, location = 0, scale = 2.5), class = "sigma"))
   
 
-# Run bayesian model with flat priors
-xmdl_letter <- brm(letter_formula,
-                   family = gaussian(),
-                   prior = flat_priors_letter,
-                   data = gesture_tidy,
-                   # Save model in a nearby file
-                   file = "../../models/letter_mdl_flat.RDS",
-                   chains = 4,
-                   cores = 4, 
-                   iter = 2000,
-                   warmup = 1000,
-                   thin = 1,
-                   seed = 42)
-```
-
-## Bayesian Reanalysis of final letters and locations models
-
-**Letters Model: Uniform priors**
-
-```{r}
-#| label: mixed_models_5  
-#| 
-# full random effects structure for the model selected in the final part of the og analysis 
-
-etters_formula <- bf(Letters_recalled ~                          
-                       Condition +                          
-                       Filled_pauses +                          
-                       (1 + Condition | Participant) +                      
-                       (1 + Condition | Item))  
-# check priors 
-get_prior(letters_formula, gesture_tidy)  
-
-# specify uniform priors 
-letters_priors <- c(prior(uniform(0,5), class  = 'Intercept'),                
-                    prior(uniform(-5, 5), class = 'b'),                     
-                    prior(uniform(-5, 5), class = 'sd'),                     
-                    prior(lkj(1), class = 'cor'))  
-
-# run model 
-letters_mdl <- brm(letters_formula,                    
-                   family = gaussian(),                    
-                   prior = letters_priors,                    
-                   data = gesture_tidy,                    
-                   # MCMC specs:                    
-                   chains = 4, cores = 4,                    
-                   iter = 2000, warmup = 1000,                    
-                   thin = 1, seed = 16)  
-
-# model output 
-letters_mdl
-```
-
-**Locations Model: Uniform priors**
-
-```{r}
-#| label: mixed_models_6  
-
-# full random effects structure for the model selected in the final part of the og analysis 
-locations_formula <- bf(Locations_recalled ~                            
-                          Condition +                            
-                          Filled_pauses +                            
-                          Deictic +                            
-                          (1 + Condition | Participant) +                       
-                          (1 + Condition | Item))  
-
-# check priors 
-get_prior(locations_formula, gesture_tidy)  
-
-# specify uniform priors 
-locations_priors <- c(prior(uniform(0,5), class  = 'Intercept'),              
-                      prior(uniform(-5, 5), class = 'b'),                     
-                      prior(uniform(-5, 5), class = 'sd'),                    
-                      prior(lkj(1), class = 'cor'))  
-
-# run model 
-locations_mdl <- brm(locations_formula,                    
-                     family = gaussian(),                    
-                     prior = locations_priors,                    
-                     data = gesture_tidy,                    
-                     # MCMC specs:                    
-                     chains = 4, cores = 4,                    
-                     iter = 2000, warmup = 1000,                    
-                     thin = 1, seed = 16)  
-
-# model output 
-locations_mdl
+# Run bayesian model with weakly informative priors
+letters_model_informative <-
+  brm(letter_formula,
+       family = gaussian(),
+       prior = flat_priors_letter,
+       data = gesture_tidy,
+       # Save model in a nearby file
+       file = "models/letter_mdl_informative.RDS",
+       chains = 4,
+       cores = 4, 
+       iter = 2000,
+       warmup = 1000,
+       thin = 1,
+       seed = 42)
 ```
