@@ -71,12 +71,6 @@ head(gesture)
 gesture_tidy <- gesture |>
   filter(Include == 'y')
 
-# Calculate proportion of data excluded
-prop_excluded <- 1 - (nrow(gesture_tidy)/nrow(gesture))
-prop_excluded
-# This gets 10.8%, which is slightly more then the 10.6% the authors reported.
-# We have discarded 127 trials, which is 2 more than the 125 they report in total.
-
 # Remove columns we will not use
 gesture_tidy <- gesture_tidy |>
   select(- c(Script,
@@ -113,22 +107,36 @@ gesture_tidy <- gesture_tidy |>
 
 Focusing on the final part of the article's study 1 analysis, since it actually addresses their main research question.
 
-## Models predicting recall by condition
-
-### Letters Model: Uniform priors
-
 ```{r}
-#| label: models1 
-#| 
-# full random effects structure for the model selected in the final part of the og analysis 
+#| label: model formulas
+
+# set model formulas for final two models
 
 letters_formula <- bf(Letters_recalled ~                          
                        Condition +                          
                        Filled_pauses +                          
                        (1 + Condition | Participant) +                      
                        (1 + Condition | Item))  
+
+
+locations_formula <- bf(Locations_recalled ~                            
+                          Condition +                            
+                          Filled_pauses +                            
+                          Deictic +                            
+                          (1 + Condition | Participant) +                       
+                          (1 + Condition | Item))  
 # check priors 
 get_prior(letters_formula, gesture_tidy)  
+
+get_prior(locations_formula, gesture_tidy)
+
+  # priors are functionally identical for both models, so we will be using one set of priors for letters and locations models 
+```
+
+## Flat prior models
+
+```{r}
+#| label: models1 
 
 # specify uniform priors 
 priors_flat <- c(# System would prefer we specify argument `lb` & `ub` to make explicit lower and upper bounds. Also for class `b`.
@@ -140,7 +148,7 @@ priors_flat <- c(# System would prefer we specify argument `lb` & `ub` to make e
                     # This also seems to be the default, but we state it explicitly
                     prior(lkj(1), class = 'cor'))  
 
-# run model 
+# run letters model 
 letters_mdl_flat <- brm(letters_formula,                    
                    family = gaussian(),                    
                    prior = letters_priors,                    
@@ -153,22 +161,8 @@ letters_mdl_flat <- brm(letters_formula,
 
 # model output 
 letters_mdl_flat
-```
 
-### Locations Model: Uniform priors
-
-```{r}
-#| label: models2 
-
-# full random effects structure for the model selected in the final part of the og analysis 
-locations_formula <- bf(Locations_recalled ~                            
-                          Condition +                            
-                          Filled_pauses +                            
-                          Deictic +                            
-                          (1 + Condition | Participant) +                       
-                          (1 + Condition | Item))  
-
-# run model 
+# run locations model 
 locations_mdl_flat <- brm(locations_formula,                    
                      family = gaussian(),                    
                      prior = locations_priors,                    
@@ -189,31 +183,46 @@ locations_mdl_flat
 #| label: models3
 
 # Set weakly informative priors for intercept and predictors.
-priors_letters_informative <- c(
+priors_informative <- 
+  c(prior(normal(2.5, 2.5), class = 'Intercept'),
+    prior(normal(0, 2.5), class = 'b'),
+    prior(normal(0, 2.5), class = 'sd'),
+    prior(lkj(1), class = 'cor'),
+    prior(normal(0, 2.5), class = "sigma"))
   # Text copied from Jo:
   # We do not manually specify priors for the fixed effects (class = "b");
   # brms defaults are the closest practical analogue to flat/diffuse priors here.
   # Random-effect standard deviations need proper priors in a Bayesian MLM.
   # A broad Student-t prior is weakly informative and computationally safer than a bounded uniform prior.
-  prior(student_t(df = 3, location = 0, scale = 2.5,
-        class = 'sd')),
+  
   # Residual standard deviation also needs a proper positive prior.
  # Again, we use a broad weakly informative Student-t.
-  prior(student_t(df = 3, location = 0, scale = 2.5), class = "sigma"))
   
 
 # Run bayesian model with weakly informative priors
 letters_model_informative <-
-  brm(letter_formula,
+  brm(letters_formula,
        family = gaussian(),
-       prior = flat_priors_letter,
+       prior = priors_informative,
        data = gesture_tidy,
        # Save model in a nearby file
-       file = "models/letter_mdl_informative.RDS",
-       chains = 4,
-       cores = 4, 
-       iter = 2000,
-       warmup = 1000,
-       thin = 1,
-       seed = 42)
+       file = "models/letters_mdl_informative.RDS",
+       chains = 4, cores = 4, 
+       iter = 2000, warmup = 1000,
+       thin = 1, seed = 16)
+
+letters_model_informative
+
+locations_model_informative <- 
+  brm(locations_formula,
+       family = gaussian(),
+       prior = priors_informative,
+       data = gesture_tidy,
+       # Save model in a nearby file
+       file = "models/locations_mdl_informative.RDS",
+       chains = 4, cores = 4, 
+       iter = 2000, warmup = 1000,
+       thin = 1, seed = 16)
+
+locations_model_informative
 ```
