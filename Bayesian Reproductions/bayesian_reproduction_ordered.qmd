@@ -247,7 +247,10 @@ locations_model_informative
 
 # b.2) Interpret the results relative to the research question by interpreting the posteriors relative to zero
 
+## Check General checks
+
 ```{r}
+#| 
 
 pp_check(letters_model_informative, ndraws = 100)
 
@@ -258,7 +261,6 @@ mcmc_plot(locations_model_informative, type = 'trace')
 
 # Shit goes kinda flimpy over there.
 
-
 mcmc_dens_overlay(letters_model_informative)
 
 # No. Not legible. For our human eyes anyway.
@@ -266,10 +268,9 @@ mcmc_dens_overlay(letters_model_informative)
 p_direction(letters_model_informative)
 p_direction(locations_model_informative)
 
-# Plot the posterior
+# Plot the posteriors
 
 letters_model_informative |> 
-  spread_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses) |> 
   gather_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses) |>
   ggplot(aes(x = .value)) +
   stat_halfeye(fill = '#756bb1') +
@@ -277,29 +278,64 @@ letters_model_informative |>
   geom_density(fill = "#bcbddc", alpha = 0.5) +
   facet_wrap(~ .variable, scales = "free") +
   labs(
-    x = "Posterior slope",
-    y = "Density",
-    title = "Distribution of posterior") +
+    x = "\nPosterior slope",
+    y = "Density\n",
+    title = "Distribution of posteriors for model predicting letter recall\n") +
   theme_minimal()
 
+locations_model_informative |> 
+  gather_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses, b_Deictic) |>
+  ggplot(aes(x = .value)) +
+  stat_halfeye(fill = '#756bb1') +
+  geom_vline(xintercept = 0, lty = 'dashed') +
+  geom_density(fill = "#bcbddc", alpha = 0.5) +
+  facet_wrap(~ .variable, scales = "free") +
+  labs(
+    x = "\nPosterior slope",
+    y = "Density\n",
+    title = "Distribution of posteriors for model predicting location recall\n") +
+  theme_minimal()
+```
 
-# Calculating Bayes Factor
+## Bayes factors
 
-posteriors <- xmdl_sim_sqrt |> 
-  spread_draws(b_Sem1, b_Phon1, `b_Sem1:Phon1`) |> 
-  select(b_Sem1, b_Phon1, `b_Sem1:Phon1`)
+```{r}
+#| label: bayes_factos
+#Extract posteriors
 
-xmdl_sim_sqrt_priors <- brm(sqrt_dist ~ Sem * Phon,
-            family = gaussian(),
-            prior = my_priors,
-            sample_prior = "only",
-            data = sim,
-            chains = 4,
-            cores = 4, 
-            iter = 2000,
-            warmup = 1000,
-            thin = 1,
-            seed = 42)
+letters_posteriors <- letters_model_informative |> 
+  spread_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses) |>
+  select(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses)
+
+locations_posteriors <- locations_model_informative |> 
+  spread_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses, b_Deictic) |>
+  select(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses, b_Deictic)
+
+# Create prior models
+
+letters_model_prior <-
+  brm(letters_formula,
+       family = gaussian(),
+       prior = priors_informative,
+       sample_prior = 'only',
+       data = gesture_tidy,
+       # Save model in a nearby file
+       file = "models/letters_mdl_prior.RDS",
+       chains = 4, cores = 4, 
+       iter = 2000, warmup = 1000,
+       thin = 1, seed = 16)
+
+locations_model_prior <- 
+  brm(locations_formula,
+       family = gaussian(),
+       prior = priors_informative,
+       sample_prior = 'only',
+       data = gesture_tidy,
+       # Save model in a nearby file
+       file = "models/locations_mdl_prior.RDS",
+       chains = 4, cores = 4, 
+       iter = 2000, warmup = 1000,
+       thin = 1, seed = 16)
 
 priors <- xmdl_sim_sqrt_priors |> 
   spread_draws(b_Sem1, b_Phon1, `b_Sem1:Phon1`) |> 
