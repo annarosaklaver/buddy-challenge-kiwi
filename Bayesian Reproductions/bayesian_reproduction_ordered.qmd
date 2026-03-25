@@ -271,7 +271,8 @@ p_direction(locations_model_informative)
 # Plot the posteriors
 
 letters_model_informative |> 
-  gather_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses) |>
+  spread_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses) |>
+  gather_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses) |> 
   ggplot(aes(x = .value)) +
   stat_halfeye(fill = '#756bb1') +
   geom_vline(xintercept = 0, lty = 'dashed') +
@@ -284,7 +285,8 @@ letters_model_informative |>
   theme_minimal()
 
 locations_model_informative |> 
-  gather_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses, b_Deictic) |>
+  spread_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses, b_Deictic) |>
+  gather_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses, b_Deictic) |> 
   ggplot(aes(x = .value)) +
   stat_halfeye(fill = '#756bb1') +
   geom_vline(xintercept = 0, lty = 'dashed') +

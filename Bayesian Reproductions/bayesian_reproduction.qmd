@@ -103,9 +103,11 @@ gesture_tidy <- gesture_tidy |>
          Condition = as.factor(Condition))
 ```
 
-# a) run the closest equivalent of their analysis (i.e. same structure but using flat priors)
+# Model with flat priors
 
 Focusing on the final part of the article's study 1 analysis, since it actually addresses their main research question.
+
+## Get priors
 
 ```{r}
 #| label: model formulas
@@ -133,7 +135,7 @@ get_prior(locations_formula, gesture_tidy)
   # priors are functionally identical for both models, so we will be using one set of priors for letters and locations models 
 ```
 
-## Flat prior models
+## Model
 
 ```{r}
 #| label: models1 
@@ -177,7 +179,9 @@ locations_mdl_flat <- brm(locations_formula,
 locations_mdl_flat
 ```
 
-# b) run a proper model with proper, weakly informative priors and justify your prior choices; interpret the results relative to the research question by interpreting the posteriors relative to zero; write up the results and write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). add the report to your GitHub Repo from Part 3.
+# Model with weakly informative priors
+
+## Set priors annd run model
 
 ```{r}
 #| label: models3
@@ -226,3 +230,119 @@ locations_model_informative <-
 
 locations_model_informative
 ```
+
+# Interpreting the results
+
+## Checks and posterior plotting
+
+```{r}
+#| label: checks
+
+pp_check(letters_model_informative, ndraws = 100)
+
+pp_check(locations_model_informative, ndraws = 100)
+
+mcmc_plot(letters_model_informative, type = 'trace')
+mcmc_plot(locations_model_informative, type = 'trace')
+
+# Shit goes kinda flimpy over there.
+
+mcmc_dens_overlay(letters_model_informative)
+
+# No. Not legible. For our human eyes anyway.
+
+p_direction(letters_model_informative)
+p_direction(locations_model_informative)
+
+# Plot the posteriors
+
+letters_model_informative |> 
+  spread_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses) |>
+  gather_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses) |> 
+  ggplot(aes(x = .value)) +
+  stat_halfeye(fill = '#756bb1') +
+  geom_vline(xintercept = 0, lty = 'dashed') +
+  geom_density(fill = "#bcbddc", alpha = 0.5) +
+  facet_wrap(~ .variable, scales = "free") +
+  labs(
+    x = "\nPosterior slope",
+    y = "Density\n",
+    title = "Distribution of posteriors for model predicting letter recall\n") +
+  theme_minimal()
+
+locations_model_informative |> 
+  spread_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses, b_Deictic) |>
+  gather_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses, b_Deictic) |> 
+  ggplot(aes(x = .value)) +
+  stat_halfeye(fill = '#756bb1') +
+  geom_vline(xintercept = 0, lty = 'dashed') +
+  geom_density(fill = "#bcbddc", alpha = 0.5) +
+  facet_wrap(~ .variable, scales = "free") +
+  labs(
+    x = "\nPosterior slope",
+    y = "Density\n",
+    title = "Distribution of posteriors for model predicting location recall\n") +
+  theme_minimal()
+```
+
+## Bayes Factor
+
+```{r}
+#| label: bayes_factors #Extract posteriors
+
+# Extract posteriors
+
+letters_posteriors <- letters_model_informative |> 
+  spread_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses) |>
+  select(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses)
+
+locations_posteriors <- locations_model_informative |> 
+  spread_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses, b_Deictic) |>
+  select(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses, b_Deictic)
+
+# Create prior models
+
+letters_model_prior <-
+  brm(letters_formula,
+       family = gaussian(),
+       prior = priors_informative,
+       sample_prior = 'only',
+       data = gesture_tidy,
+       # Save model in a nearby file
+       file = "models/letters_mdl_prior.RDS",
+       chains = 4, cores = 4, 
+       iter = 2000, warmup = 1000,
+       thin = 1, seed = 16)
+
+locations_model_prior <- 
+  brm(locations_formula,
+       family = gaussian(),
+       prior = priors_informative,
+       sample_prior = 'only',
+       data = gesture_tidy,
+       # Save model in a nearby file
+       file = "models/locations_mdl_prior.RDS",
+       chains = 4, cores = 4, 
+       iter = 2000, warmup = 1000,
+       thin = 1, seed = 16)
+
+# Extract priors
+
+letters_priors <- letters_model_prior |> 
+  spread_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses) |>
+  select(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses)
+
+locations_priors <- locations_model_prior |> spread_draws(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses, b_Deictic) |>
+  select(b_ConditionHandsstill, b_ConditionMake, b_Filled_pauses, b_Deictic)
+
+# Bayes Factor for letters model
+bayesfactor_parameters(letters_posteriors, letters_priors, direction = "two-sided", null = 0)
+
+# Bayes Factor for locations model
+bayesfactor_parameters(locations_posteriors, locations_priors, direction = "two-sided", null = 0)
+
+```
+
+# Write-up
+
+# the results and write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). add the report to your GitHub Repo from Part 3.
