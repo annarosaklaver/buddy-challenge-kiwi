@@ -103,7 +103,7 @@ gesture_tidy <- gesture_tidy |>
          Condition = as.factor(Condition))
 ```
 
-# Model with flat priors
+# a) Model with flat priors
 
 Focusing on the final part of the article's study 1 analysis, since it actually addresses their main research question.
 
@@ -179,9 +179,9 @@ locations_mdl_flat <- brm(locations_formula,
 locations_mdl_flat
 ```
 
-# Model with weakly informative priors
+# b) Model with weakly informative priors
 
-## Set priors annd run model
+## Set priors and run model
 
 ```{r}
 #| label: models3
@@ -231,9 +231,9 @@ locations_model_informative <-
 locations_model_informative
 ```
 
-# Interpreting the results
+## Interpret the results
 
-## Checks and posterior plotting
+### Checks and posterior plotting
 
 ```{r}
 #| label: checks
@@ -285,7 +285,7 @@ locations_model_informative |>
   theme_minimal()
 ```
 
-## Bayes Factor
+### Bayes Factor
 
 ```{r}
 #| label: bayes_factors #Extract posteriors
@@ -343,6 +343,10 @@ bayesfactor_parameters(locations_posteriors, locations_priors, direction = "two-
 
 ```
 
-# Write-up
+For the model predicting correct recall of letters (0-5 recalled correctly), the 'condition' predictor has a base level of 'gesture', and alternate levels of 'hands still' and 'make'. The Bayes factor for hands still as opposed to gesture is 0.581, indicating anecdotal evidence favoring the null hypothesis that there is no effect of hands still condition. The Bayes factor for make is 0.062, indicating strong evidence favoring the null. The 'filled pauses' predictor is numeric (ranging from 0-13), using the number of filled pauses recorded as a predictor of letter recall. Its Bayes factor is 0.015, indicating very strong evidence favoring the null that there is no effect of filled pauses.
 
-# the results and write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). add the report to your GitHub Repo from Part 3.
+For the model predicting correct recall of locations (0-5 recalled correctly), condition and filled pauses predictor are also used. The Bayes factor for hands still as opposed to gesture is 0.046, indicating strong evidence favoring the null hypothesis that there is no effect of hands still condition. The Bayes factor for make is 0.065, indicating strong evidence favoring the null. The Bayes factor for filled pauses is 0.027, indicating very strong evidence favoring the null that there is no effect of filled pauses. This model also uses number of deictic references as a predictor (ranging from 0-1), which has a Bayes factor of 1.45, indicating anecdotal evidence favoring the alternative hypothesis that there is an effect of deictic references on locations recalled.
+
+### Write-up
+
+*Task: write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). Add the report to your GitHub Repo from Part 3.*
