@@ -1,0 +1,59 @@
+---
+title: "Reproducibility Assessment - Kiwi Group"
+format: pdf
+editor: visual
+date: 2026-03-27
+author: Anna Rosa Klaver, Are Markku Alanen Tjihkkom, Jemima Agnew, Liradie Allen, Naomi Takizawa
+execute:
+  error: false
+  warning: false
+  message: false
+  cache: false
+#bibliography: ../../resources/bibliography.bib
+---
+
+## **Bayesian Reanalysis Report**
+
+*Task: Write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). Add the report to your GitHub Repo from Part 3.*
+
+## **Report**
+
+To assess if the reported effects of Hostetter and Bahl (2023) are robust, we ran two Bayesian models using brms. Weakly informative priors were set for all model parameters. The two models have different outcome predictors (letters vs. locations). However, both predictors have the same outcome scale (0-5), and so one set of priors was used for both the letters and locations models.
+
+### **Priors**
+
+Intercept was set as *normal (2.5 , 2.5)*. The recall scores ranged from 0-5. This intercept prior is centred at the mid-point and encompasses the possible outcomes. Fixed effects (b), Random effect (sd), and Residual variance (sigma) were all set for *normal (0 , 2.5)*. This fixed effect assumes no strong prior effect for the predictor in each model. This random effect allows moderate variability across participant and item. *prior(lkj(1), class = 'cor')* was set based on the default correlation prior given during class.
+
+### **Letters Recalled**
+
+```{r}
+letters_formula <- bf(Letters_recalled ~ Condition + Filled_pauses + (1 + Condition | Participant) + (1 + Condition | Item))
+```
+
+The findings for the original linear mixed model in Hostetter and Bahl (2023) was that participants recalled more letters in the Gesture condition than in the Hands-still condition. This was a statistically significant difference: Gesture M = 2.96, SE = 0.14; Hands-still M = 2.73, SE = 0.14; β = .24, SE = .09, t = 2.53, p = .01. In our Bayesian model, the intercept corresponds to the Gesture condition (Estimate = 2.98). The coefficient for the Hands-still condition is negative (Estimate = -0.23, 95% CI \[-0.43,-0.03\]). This is quite close to the original estimate (.24 vs .23). The findings from our Bayesian re-analysis are consistent with the original linear mixed effects model. The number of letters recalled is lower in the Hands-still condition compared to the Gesture condition. Our model provides similar support for the original authors' claim that gesturing reduces cognitive load relative to keeping the hands still.
+
+The authors' original model found no significant difference between the Make and Gesture conditions (β = .08, SE = .10, t = 0.82, p = .41). Similarly, our Bayesian model estimates a very small effect for the Make condition (Estimate = -0.08, 95% CI\[-0.31,0.15\]). As per the original analysis, our model shows no evidence of a significant difference between the Make and Gesture conditions on the number of letters recalled. Hostetter and Bahl (2023) use this finding to claim that either making an action or a gesture similarly reduces cognitive load effects on recall.
+
+Hostetter and Bahl's (2023) model also included Filled pauses. This was not significant (β = -0.005, p = .89). In our Bayesian model, the estimate is similarly close to zero (Estimate = -0.01, 95%  CI\[-0.07,0.06\]).
+
+***Bayes factor.*** For the model predicting correct recall of letters (0-5 recalled correctly), the 'condition' predictor has a base level of 'gesture', and alternate levels of 'hands still' and 'make'. The Bayes factor for hands still as opposed to gesture is 0.581. This indicates anecdotal evidence favoring the null hypothesis, that is, there is no effect of the hands still condition. The Bayes factor for make is 0.062, indicating strong evidence favoring the null. The 'filled pauses' predictor is numeric (ranging from 0-13), using the number of filled pauses recorded as a predictor of letter recall. Its Bayes factor is 0.015, indicating very strong evidence favoring the null that there is no effect of filled pauses.
+
+### **Locations Recalled**
+
+```{r}
+locations_formula <- bf(Locations_recalled ~ Condition + Filled_pauses + Deictic + (1 + Condition | Participant) + (1 + Condition | Item))
+```
+
+As per the findings of the original linear mixed model in Hostetter and Bahl (2023), there was no significant effect of condition on the number of locations recalled. Likewise, the findings from our Bayesian model do not suggest any difference on the number of locations recalled between the three conditions. The effect size of Hands-still relative to Gesture is small (Estimate = 0.04, 95%  CI\[-0.17,0.26\]), as is the effect of the Make condition (Estimate = -0.10, 95% CI\[-0.31,0.10\]). The credible intervals both include zero. This is in line with the original findings that the make condition did not have a significant effect on the number of locations recalled.
+
+Hostetter and Bahl's (2023) model for locations recalled also included both Filled pauses and Deictic as factors. There was no significant effect of Filled pauses in the original location model. Similarly, In our model there was not a large effect (β = -0.04, 95% CI \[-0.10,0.03\]). Hostetter and Bahl (2023) found a significant positive effect of Diectic gesture on number of locations recalled. This factor was for if a 'Diectic type' gesture was used within a trial. In our Bayesian model, Diectic also had a positive effect (Estimate = 0.31, 95%  CI\[0.07,0.54\]). This aligns with their claim that when a deictic gesture was used, there was an increase in number of locations recalled. Though, I would like to point out the estimate size of 0.31 of a location.
+
+***Bayes factor.*** For the model predicting correct recall of locations (0-5 recalled correctly), condition and filled pauses predictor are also used. The Bayes factor for hands still as opposed to gesture is 0.046, indicating strong evidence favoring the null hypothesis that there is no effect of hands still condition. The Bayes factor for make is 0.065, indicating strong evidence favoring the null. The Bayes factor for filled pauses is 0.027, indicating very strong evidence favoring the null that there is no effect of filled pauses. This model also uses number of deictic references as a predictor (ranging from 0-1). This had a Bayes factor of 1.45, indicating anecdotal evidence favoring the alternative hypothesis that there is an effect of deictic references on locations recalled.
+
+### **Comparison to the original model**
+
+The estimates derived from our Bayesian models are very similar to the coefficients reported from the original linear mixed effects models in Hostetter and Bahl's (2023). The direction and size of the effects for both the letters recalled and locations recalled models are relatively similar. On a surface level, both the original and our own Bayesian re-analyses can seemingly be used to support the same conclusions. That is, 1. using gestures compared to keeping hands still reduces cognitive load in a letter recall task, 2. both making an action and a gesture have similar cognitive load benefits in a letter recall task, 3. make condition does not have an effect on number of locations recalled, and 4. using a Deictic reference gesture increases number of locations recalled. The Bayesian estimates from our analysis are of the same direction and similar magnitude to the orginally reported effects. However, the Bayes factors indicate only weak evidence for the effect. This suggests that the original claims are largely overstated. In addition, one of the main qualitative differences between the original and our own analysis is interpretive. In the letters recalled model, the estimate for the Hands-still condition is -0.23. What is the meaningfulness of 0.23 of a letter. Similarly, for the locations recalled model, the estimate size for the effect of Diectic gesture is 0.31. Again, what is the meaningfulness of 0.32 of a correctly recalled location. And so, whilst quantitatively our findings pattern well with the original findings, our interpretation of how meaningful these findings are differs.
+
+## **References**
+
+Hostetter, A. B., & Bahl, S. (2023). Comparing the cognitive load of gesture and action production: A dual-task study. *Language and Cognition*, *15*(3), 601–621.
