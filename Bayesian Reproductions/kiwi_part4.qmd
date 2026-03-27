@@ -3,7 +3,7 @@ title: "Bayesian Reanalysis Report - Kiwi Group"
 format: pdf
 editor: visual
 date: 2026-03-27
-author: Anna Rosa Klaver, Are Markku Alanen Tjihkkom, Jemima Agnew, Liradie Allen, Naomi Takizawa
+author: "Anna Rosa Klaver, Are Markku Alanen Tjihkkom, Jemima Agnew, Liradie Allen, Naomi Takizawa"
 execute:
   error: false
   warning: false
@@ -12,11 +12,9 @@ execute:
 #bibliography: ../../resources/bibliography.bib
 ---
 
-## **Bayesian Reanalysis Report**
-
 *Task: Write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). Add the report to your GitHub Repo from Part 3.*
 
-## **Report**
+## **Bayesian Reanalysis Report**
 
 To assess if the reported effects of Hostetter and Bahl (2023) are robust, we ran two Bayesian models using brms. Weakly informative priors were set for all model parameters. The two models have different outcome predictors (letters vs. locations). However, both predictors have the same outcome scale (0-5), and so one set of priors was used for both the letters and locations models.
 
