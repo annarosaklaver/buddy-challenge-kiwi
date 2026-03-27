@@ -27,7 +27,7 @@ Intercept was set as *normal (2.5 , 2.5)*. The recall scores ranged from 0-5. Th
 ### **Letters Recalled**
 
 ```{r}
-letters_formula <- bf(Letters_recalled ~ Condition + Filled_pauses + (1 + Condition | Participant) + (1 + Condition | Item))
+#letters_formula <- bf(Letters_recalled ~ Condition + Filled_pauses + (1 + Condition | Participant) + (1 + Condition | Item))
 ```
 
 The findings for the original linear mixed model in Hostetter and Bahl (2023) was that participants recalled more letters in the Gesture condition than in the Hands-still condition. This was a statistically significant difference: Gesture M = 2.96, SE = 0.14; Hands-still M = 2.73, SE = 0.14; β = .24, SE = .09, t = 2.53, p = .01. In our Bayesian model, the intercept corresponds to the Gesture condition (Estimate = 2.98). The coefficient for the Hands-still condition is negative (Estimate = -0.23, 95% CI \[-0.43,-0.03\]). This is quite close to the original estimate (.24 vs .23). The findings from our Bayesian re-analysis are consistent with the original linear mixed effects model. The number of letters recalled is lower in the Hands-still condition compared to the Gesture condition. Our model provides similar support for the original authors' claim that gesturing reduces cognitive load relative to keeping the hands still.
@@ -41,7 +41,7 @@ Hostetter and Bahl's (2023) model also included Filled pauses. This was not sign
 ### **Locations Recalled**
 
 ```{r}
-locations_formula <- bf(Locations_recalled ~ Condition + Filled_pauses + Deictic + (1 + Condition | Participant) + (1 + Condition | Item))
+#locations_formula <- bf(Locations_recalled ~ Condition + Filled_pauses + Deictic + (1 + Condition | Participant) + (1 + Condition | Item))
 ```
 
 As per the findings of the original linear mixed model in Hostetter and Bahl (2023), there was no significant effect of condition on the number of locations recalled. Likewise, the findings from our Bayesian model do not suggest any difference on the number of locations recalled between the three conditions. The effect size of Hands-still relative to Gesture is small (Estimate = 0.04, 95%  CI\[-0.17,0.26\]), as is the effect of the Make condition (Estimate = -0.10, 95% CI\[-0.31,0.10\]). The credible intervals both include zero. This is in line with the original findings that the make condition did not have a significant effect on the number of locations recalled.
