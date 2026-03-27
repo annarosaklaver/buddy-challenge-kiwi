@@ -1,5 +1,5 @@
 ---
-title: "Reproducibility Assessment - Kiwi Group"
+title: "Bayesian Reanalysis Report - Kiwi Group"
 format: pdf
 editor: visual
 date: 2026-03-27
