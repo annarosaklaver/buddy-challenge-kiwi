@@ -288,7 +288,7 @@ locations_model_informative |>
 ### Bayes Factor
 
 ```{r}
-#| label: bayes_factors #Extract posteriors
+#| label: bayes_factors 
 
 # Extract posteriors
 
@@ -350,3 +350,96 @@ For the model predicting correct recall of locations (0-5 recalled correctly), c
 ### Write-up
 
 *Task: write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). Add the report to your GitHub Repo from Part 3.*
+
+## Hypothesis testing using ROPEs
+
+```{r}
+#| label: ROPEs
+
+# set a ROPE
+rope <- c(-0.5, 0.5)
+
+# calculate Bayes Factor using the ROPE
+  # for the letters model
+bayesfactor_rope(posterior = letters_model_informative,
+                 prior = letters_model_prior,
+                 null = rope,
+                 parameters = c('b_ConditionHandsstill', 
+                                'b_ConditionMake', 
+                                'b_Filled_pauses'))
+
+  # for the locations model
+bayesfactor_rope(posterior = locations_model_informative,
+                 prior = locations_model_prior,
+                 null = rope,
+                 parameters = c('b_ConditionHandsstill', 
+                                'b_ConditionMake', 
+                                'b_Filled_pauses',
+                                'b_Deictic'))
+```
+
+\[insert writeup here\]
+
+```{r}
+#| label: sensitivity analysis
+
+# Repeat our priors for all parameters except the predictors (class 'b')
+priors <- c(prior(normal(2.5, 2.5), class = 'Intercept'),
+            prior(normal(0, 2.5), class = 'sd'),
+            prior(lkj(1), class = 'cor'),
+            prior(normal(0, 2.5), class = "sigma"))
+
+# five different prior widths that are reasonable
+priors_1.5 <- c(priors, prior(normal(0, 1.5), class = 'b'))
+priors_2 <- c(priors, prior(normal(0, 2), class = 'b'))
+# our original prior width
+priors_2.5 <- c(priors, prior(normal(0, 2.5), class = 'b'))
+priors_3 <- c(priors, prior(normal(0, 3), class = 'b'))
+priors_3.5 <- c(priors, prior(normal(0, 3.5), class = 'b'))
+
+# Define a list of these prior specifications
+prior_list <- list(priors_1.5,
+                   priors_2,
+                   priors_2.5,
+                   priors_3,
+                   priors_3.5)
+
+#initialise lists to store models
+letters_model_list <- list()
+locations_model_list <- list()
+
+# Loop over the priors for letters models
+for (i in seq_along(prior_list)) {
+  letters_model_list[[i]] <-
+     brm(letters_formula,
+       family = gaussian(),
+       prior = prior_list[[i]],
+       data = gesture_tidy,
+       chains = 4, cores = 4, 
+       iter = 2000, warmup = 1000,
+       thin = 1, seed = 16)
+}
+
+# name models
+names(letters_model_list) <- paste0("full_model_with_prior_", c(1.5,2,2.5,3,3.5))
+# save models
+saveRDS(letters_model_list, "models/letters_model_loop.RDS")
+
+
+# Loop over the priors for locations models
+for (i in seq_along(prior_list)) {
+  locations_model_list[[i]] <-
+     brm(locations_formula,
+       family = gaussian(),
+       prior = prior_list[[i]],
+       data = gesture_tidy,
+       chains = 4, cores = 4, 
+       iter = 2000, warmup = 1000,
+       thin = 1, seed = 16)
+}
+
+# name models
+names(locations_model_list) <- paste0("full_model_with_prior_", c(1.5,2,2.5,3,3.5))
+# save models
+saveRDS(locations_model_list, "models/locations_model_loop.RDS")
+```
