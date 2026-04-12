@@ -380,9 +380,12 @@ bayesfactor_rope(posterior = locations_model_informative,
 
 \[insert writeup here\]
 
-```{r}
-#| label: sensitivity analysis
+## Sensitivity analysis
 
+```{r}
+#| label: models with varying priors
+
+# DO NOT RUN THIS CHUNK, MODELS HAVE ALREADY BEEN SAVED
 # Repeat our priors for all parameters except the predictors (class 'b')
 priors <- c(prior(normal(2.5, 2.5), class = 'Intercept'),
             prior(normal(0, 2.5), class = 'sd'),
@@ -442,4 +445,200 @@ for (i in seq_along(prior_list)) {
 names(locations_model_list) <- paste0("full_model_with_prior_", c(1.5,2,2.5,3,3.5))
 # save models
 saveRDS(locations_model_list, "models/locations_model_loop.RDS")
+```
+
+```{r}
+#| label: loading in the model lists
+
+# load models into new objects
+letters_model_list <- readRDS("models/letters_model_loop.RDS")
+locations_model_list <- readRDS("models/locations_model_loop.RDS")
+```
+
+```{r}
+#| label: exploring different ROPEs
+
+# specify different ROPE intervals of interest
+ropes <- list(c(-0.1, 0.1),
+              c(-0.3, 0.3),
+              c(-0.5, 0.5),
+              c(-0.7, 0.7),
+              c(-1, 1))
+
+# loop through different ropes: LETTERS
+letters_results <- map_dfr(names(letters_model_list), function(model_name) {
+  model <- letters_model_list[[model_name]]
+  
+  map_dfr(ropes, function(interval) {
+    lower <- interval[1]
+    upper <- interval[2]
+    
+    bayesfactor_parameters(
+      model,
+      null = c(lower, upper),
+      parameters = c('b_ConditionHandsstill', 
+                                'b_ConditionMake', 
+                                'b_Filled_pauses')
+    ) %>%
+      as_tibble() %>%
+      mutate(
+        model = model_name,
+        interval_range = paste0("[", lower, ", ", upper, "]")
+      ) %>%
+      select(model, everything())
+  })
+})
+
+# wrangle per parameter (I've ignored the results for fixed pauses because that's not relevant for the hypotheses)
+letters_results_handsstill <- letters_results |> 
+  filter(Parameter == "b_ConditionHandsstill") |> 
+  separate(model, sep = "_", into = c(NA, NA, NA, NA, "prior_sd")) |> 
+  mutate(BF = exp(log_BF)) |> 
+  select(prior_sd, BF, interval_range)
+
+letters_results_make <- letters_results |> 
+  filter(Parameter == "b_ConditionMake") |> 
+  separate(model, sep = "_", into = c(NA, NA, NA, NA, "prior_sd")) |> 
+  mutate(BF = exp(log_BF)) |> 
+  select(prior_sd, BF, interval_range)
+
+# loop through different ropes: LOCATIONS
+locations_results <- map_dfr(names(locations_model_list), function(model_name) {
+  model <- locations_model_list[[model_name]]
+  
+  map_dfr(ropes, function(interval) {
+    lower <- interval[1]
+    upper <- interval[2]
+    
+    bayesfactor_parameters(
+      model,
+      null = c(lower, upper),
+      parameters = c('b_ConditionHandsstill', 
+                                'b_ConditionMake', 
+                                'b_Filled_pauses',
+                                'b_Deictic')
+    ) %>%
+      as_tibble() %>%
+      mutate(
+        model = model_name,
+        interval_range = paste0("[", lower, ", ", upper, "]")
+      ) %>%
+      select(model, everything())
+  })
+})
+
+# wrangle per parameter (I've ignored the results for fixed pauses because that's not relevant for the hypotheses)
+locations_results_handsstill <- locations_results |> 
+  filter(Parameter == "b_ConditionHandsstill") |> 
+  separate(model, sep = "_", into = c(NA, NA, NA, NA, "prior_sd")) |> 
+  mutate(BF = exp(log_BF)) |> 
+  select(prior_sd, BF, interval_range)
+
+locations_results_make <- locations_results |> 
+  filter(Parameter == "b_ConditionMake") |> 
+  separate(model, sep = "_", into = c(NA, NA, NA, NA, "prior_sd")) |> 
+  mutate(BF = exp(log_BF)) |> 
+  select(prior_sd, BF, interval_range)
+```
+
+```{r}
+#| label: sensitivity analysis plots
+
+# visualise the BFs for the letter models in a raster
+letters_handsstill_plot <- ggplot(letters_results_handsstill,
+       aes(x = as.factor(prior_sd),
+           y = as.factor(interval_range),
+           fill = BF)) +
+  geom_tile(colour = "grey") +
+  geom_text(aes(label = round(BF,3))) +
+  scale_fill_gradient2(transform = "log",
+                       limits = c(0.1,10),
+                       midpoint = 1, 
+                       low = "#5C7457", 
+                       high = "#FA8100",
+                       breaks = c(0.00000,0.03,0.1,0.33,0,3,10),
+                       labels = c("0","0.03","0.1","0.33","1","3","10"),
+                       oob = scales::squish
+                       ) +
+  labs(title = "(A) Bayes factor in favour of null", 
+       subtitle = "Effect of hands still condition on letter recall",
+       fill = "BF",
+       y = "ROPE in semi tones centered on 0\n ",
+       x = "\nprior standard deviation") +
+  theme_minimal()
+
+letters_handsstill_plot
+
+letters_make_plot <- ggplot(letters_results_make,
+       aes(x = as.factor(prior_sd),
+           y = as.factor(interval_range),
+           fill = BF)) +
+  geom_tile(colour = "grey") +
+  geom_text(aes(label = round(BF,3))) +
+  scale_fill_gradient2(transform = "log",
+                       limits = c(0.1,10),
+                       midpoint = 1, 
+                       low = "#5C7457", 
+                       high = "#FA8100",
+                       breaks = c(0.00000,0.03,0.1,0.33,0,3,10),
+                       labels = c("0","0.03","0.1","0.33","1","3","10"),
+                       oob = scales::squish
+                       ) +
+  labs(title = "(A) Bayes factor in favour of null", 
+       subtitle = "Effect of make condition on letter recall",
+       fill = "BF",
+       y = "ROPE in semi tones centered on 0\n ",
+       x = "\nprior standard deviation") +
+  theme_minimal()
+
+letters_make_plot
+
+# visualise the BFs for the location models in a raster
+locations_handsstill_plot <- ggplot(locations_results_handsstill,
+       aes(x = as.factor(prior_sd),
+           y = as.factor(interval_range),
+           fill = BF)) +
+  geom_tile(colour = "grey") +
+  geom_text(aes(label = round(BF,3))) +
+  scale_fill_gradient2(transform = "log",
+                       limits = c(0.1,10),
+                       midpoint = 1, 
+                       low = "#5C7457", 
+                       high = "#FA8100",
+                       breaks = c(0.00000,0.03,0.1,0.33,0,3,10),
+                       labels = c("0","0.03","0.1","0.33","1","3","10"),
+                       oob = scales::squish
+                       ) +
+  labs(title = "(A) Bayes factor in favour of null", 
+       subtitle = "Effect of hands still condition on location recall",
+       fill = "BF",
+       y = "ROPE in semi tones centered on 0\n ",
+       x = "\nprior standard deviation") +
+  theme_minimal()
+
+locations_handsstill_plot
+
+locations_make_plot <- ggplot(letters_results_make,
+       aes(x = as.factor(prior_sd),
+           y = as.factor(interval_range),
+           fill = BF)) +
+  geom_tile(colour = "grey") +
+  geom_text(aes(label = round(BF,3))) +
+  scale_fill_gradient2(transform = "log",
+                       limits = c(0.1,10),
+                       midpoint = 1, 
+                       low = "#5C7457", 
+                       high = "#FA8100",
+                       breaks = c(0.00000,0.03,0.1,0.33,0,3,10),
+                       labels = c("0","0.03","0.1","0.33","1","3","10"),
+                       oob = scales::squish
+                       ) +
+  labs(title = "(A) Bayes factor in favour of null", 
+       subtitle = "Effect of make condition on location recall",
+       fill = "BF",
+       y = "ROPE in semi tones centered on 0\n ",
+       x = "\nprior standard deviation") +
+  theme_minimal()
+
+locations_make_plot
 ```
