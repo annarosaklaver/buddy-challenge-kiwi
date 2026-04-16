@@ -9,6 +9,7 @@ execute:
   warning: false
   message: false
   cache: false
+bibliography: ../resources/bibliography.bib
 ---
 
 # Preamble: Loading packages and configuration
@@ -38,6 +39,8 @@ run_if_not_knitting(setwd(current_working_dir))
 # Article
 
 Hostetter, A. B., & Bahl, S. (2023). Comparing the cognitive load of gesture and action production: A dual-task study. *Language and Cognition*, *15*(3), 601–621. <https://doi.org/10.1017/langcog.2023.23>
+
+@hostetter_comparing_2023
 
 # Buddy Challenge Task 4
 
@@ -366,15 +369,15 @@ For the model predicting correct recall of locations (0-5 recalled correctly), c
 ```{r}
 #| label: ROPEs
 
-# set a ROPE
-rope <- c(-0.5, 0.5)
+# set a ROPE based on a SESOI of 0.25 letters
+rope <- c(-0.25, 0.25)
 
 # calculate Bayes Factor using the ROPE
   # for the letters model
 bayesfactor_rope(posterior = letters_model_informative,
                  prior = letters_model_prior,
                  null = rope,
-                 parameters = c('b_ConditionHandsstill', # < 0.01
+                 parameters = c('b_ConditionHandsstill', # ~ 0.07
                                 'b_ConditionMake', # < 0.01
                                 'b_Filled_pauses')) # < 0.01
 
@@ -385,8 +388,18 @@ bayesfactor_rope(posterior = locations_model_informative,
                  parameters = c('b_ConditionHandsstill', # < 0.01
                                 'b_ConditionMake', # < 0.01
                                 'b_Filled_pauses', # < 0.01
-                                'b_Deictic')) # ~ 0.01
+                                'b_Deictic')) # ~ 0.21
 ```
+
+### SESOI Justification
+
+While, for a given trial, measurement of recall is limited to whole letters/locations recalled out of 6, our SESOI is smaller than one letter, as we consider the potential effects on memory over the course of many trials.
+
+We define a SESOI of 0.25 of a letter/location recalled, which is equivalent to 5% total recall of 5 letters/locations. This proportion is based on @langerock_cognitive_2025, which investigates the effects of lower vs. higher cognitive load-demanding tasks on recall, and reports effect sizes in the range of 5-15% recall difference within the scope of a given task. This is also supported by @rohrer_beat_2020 and @goldin-meadow_explaining_2001, which investigate recall as a function of gesture/non-gesture condition using different experimental designs, and report effects in the range of approximately 5-15% recall difference.
+
+It is important to note that Hostetter and Bahl's study uses increased recall on a secondary task as a proxy for the actual effect of interest, decreased cognitive load on the primary task where the occurs. The proposed mechanism is indirect and likely noisy, so we do not expect a large effect size.
+
+Based on the goal that these findings should be useful in future research, we consider a ROPE of ±5% difference in recall to be much more meaningful than a point-zero null. Thus, we select 5%, on the lower end of the scale, with the plan to investigate the robustness of this effect across a wider range of ROPEs.
 
 ## Sensitivity analysis
 
@@ -654,3 +667,11 @@ locations_make_plot <- ggplot(letters_results_make,
 
 locations_make_plot
 ```
+
+## References
+
+<!-- References will auto-populate in the refs div below -->
+
+::: {#refs}
+\
+:::
