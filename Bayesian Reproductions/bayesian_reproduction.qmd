@@ -9,7 +9,7 @@ execute:
   warning: false
   message: false
   cache: false
-bibliography: ../resources/bibliography.bib
+bibliography: ../resources/kiwi_bibliography.bib
 ---
 
 # Preamble: Loading packages and configuration
@@ -391,6 +391,16 @@ bayesfactor_rope(posterior = locations_model_informative,
                                 'b_Deictic')) # ~ 0.21
 ```
 
+### Results based on our chosen priors and SESOI
+
+Using a SESOI (smallest effect size of interest) of 0.25 letters/locations recalled, we calculate the Savage-Dickey density ratio [@roettger_meaningful_2025]. This lets us assess evidence for and against the null hypothesis that the effect of each predictor lies between -0.25 and 0.25, using a Bayes factor. All Bayes factors predict strong to extreme evidence in favor of the null hypothesis [@lee2014] that the given predictor does not have a meaningful effect on recall.
+
+With respect to the authors' prediction that 'gesturing will lead to better performance on a secondary task than speaking with hands still' \[\@hostetter_comparing_2023, p. 604\], the relevant Bayes factors are \~ 0.07 for letters and \< 0.01 for locations. So after seeing the data, our posterior belief that the difference between the 'gesture' and 'hands still' conditions is outside the ROPE is 0.07 and less than 0.01 times as probable after seeing the data, i.e. far less probable.
+
+While the authors do not state a hypothesis regarding the effect of the 'make' condition on recall, with respect to their question 'whether speech accompanying actions have a similar benefit', the relevant Bayes factores are \< 0.01 for both letters and locations. So, after seeing the data, our posterior beliefs that the difference between the 'gesture' and 'make' conditions is outside the ROPE is far less probable.
+
+As neither filled pauses nor deictic references are referenced by the authors as predictors of interest prior to running their analysis, we do not focus on these in our analysis of meaningful effect sizes.
+
 ### SESOI Justification
 
 While, for a given trial, measurement of recall is limited to whole letters/locations recalled out of 6, our SESOI is smaller than one letter, as we consider the potential effects on memory over the course of many trials.
@@ -667,6 +677,8 @@ locations_make_plot <- ggplot(letters_results_make,
 
 locations_make_plot
 ```
+
+### \[write up analysis of varying ROPEs and priors here\]
 
 ## References
 
