@@ -39,12 +39,12 @@ run_if_not_knitting(setwd(current_working_dir))
 
 Hostetter, A. B., & Bahl, S. (2023). Comparing the cognitive load of gesture and action production: A dual-task study. *Language and Cognition*, *15*(3), 601–621. <https://doi.org/10.1017/langcog.2023.23>
 
-# Task
+# Buddy Challenge Task 4
 
-Run a series of Bayesian models equivalent to the critical model in the original article that originally did not converge:
+*Run a series of Bayesian models equivalent to the critical model in the original article that originally did not converge:*
 
-(a) run the closest equivalent of their analysis (i.e. same structure but using flat priors)
-(b) run a proper model with proper, weakly informative priors and justify your prior choices; interpret the results relative to the research question by interpreting the posteriors relative to zero; write up the results and write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). add the report to your GitHub Repo from Part 3.
+(a) *run the closest equivalent of their analysis (i.e. same structure but using flat priors)*
+(b) *run a proper model with proper, weakly informative priors and justify your prior choices; interpret the results relative to the research question by interpreting the posteriors relative to zero; write up the results and write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). add the report to your GitHub Repo from Part 3.*
 
 # Data Preparation
 
@@ -351,7 +351,17 @@ For the model predicting correct recall of locations (0-5 recalled correctly), c
 
 *Task: write a report on the comparison between your reanalysis and their original analysis. Write at least 500 words in which you describe your analysis including your prior choices and compare the results between your analysis and the original analysis both quantitatively and qualitatively (do the analyses arrive at the same conclusions?). Add the report to your GitHub Repo from Part 3.*
 
-## Hypothesis testing using ROPEs
+# Buddy Challenge Task 5:
+
+# Hypothesis testing using ROPEs
+
+*Define the smallest effect size of interest for the original research question and do a literature research to justify your choice.*
+
+-   *rerun your hypothesis test combining the concepts of Bayes Factor (BF) and Regions of Practical Equivalence (ROPE) (according to Roettger & Franke's method, 2025)*
+
+-   *run a sensitivity analyses for different ROPES and priors; write up the results accordingly*
+
+-   *save the analysis and report in your Github repository*
 
 ```{r}
 #| label: ROPEs
@@ -364,23 +374,23 @@ rope <- c(-0.5, 0.5)
 bayesfactor_rope(posterior = letters_model_informative,
                  prior = letters_model_prior,
                  null = rope,
-                 parameters = c('b_ConditionHandsstill', 
-                                'b_ConditionMake', 
-                                'b_Filled_pauses'))
+                 parameters = c('b_ConditionHandsstill', # < 0.01
+                                'b_ConditionMake', # < 0.01
+                                'b_Filled_pauses')) # < 0.01
 
   # for the locations model
 bayesfactor_rope(posterior = locations_model_informative,
                  prior = locations_model_prior,
                  null = rope,
-                 parameters = c('b_ConditionHandsstill', 
-                                'b_ConditionMake', 
-                                'b_Filled_pauses',
-                                'b_Deictic'))
+                 parameters = c('b_ConditionHandsstill', # < 0.01
+                                'b_ConditionMake', # < 0.01
+                                'b_Filled_pauses', # < 0.01
+                                'b_Deictic')) # ~ 0.01
 ```
 
-\[insert writeup here\]
-
 ## Sensitivity analysis
+
+### Exploring varying priors
 
 ```{r}
 #| label: models with varying priors
@@ -455,6 +465,8 @@ letters_model_list <- readRDS("models/letters_model_loop.RDS")
 locations_model_list <- readRDS("models/locations_model_loop.RDS")
 ```
 
+### Exploring varying ROPEs
+
 ```{r}
 #| label: exploring different ROPEs
 
@@ -489,7 +501,7 @@ letters_results <- map_dfr(names(letters_model_list), function(model_name) {
   })
 })
 
-# wrangle per parameter (I've ignored the results for fixed pauses because that's not relevant for the hypotheses)
+# wrangle per parameter (I've ignored the results for filled pauses because that's not relevant for the hypotheses)
 letters_results_handsstill <- letters_results |> 
   filter(Parameter == "b_ConditionHandsstill") |> 
   separate(model, sep = "_", into = c(NA, NA, NA, NA, "prior_sd")) |> 
