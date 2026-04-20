@@ -1,0 +1,78 @@
+---
+title: "Kiwi Part 5"
+format: pdf
+editor: visual
+date: 2026-04-17
+author: "Anna Rosa Klaver, Are Markku Alanen Tjihkkom, Jemima Agnew, Liradie Allen, Naomi Takizawa"
+execute:
+  error: false
+  warning: false
+  message: false
+  cache: false
+#bibliography: ../../resources/bibliography.bib
+---
+
+# Buddy Challenge Task 5:
+
+# Hypothesis testing using ROPEs
+
+*Define the smallest effect size of interest for the original research question and do a literature research to justify your choice.*
+
+-   *rerun your hypothesis test combining the concepts of Bayes Factor (BF) and Regions of Practical Equivalence (ROPE) (according to Roettger & Franke's method, 2025)*
+
+-   *run a sensitivity analyses for different ROPES and priors; write up the results accordingly*
+
+-   *save the analysis and report in your Github repository*
+
+### Results based on our chosen priors and SESOI
+
+Using a SESOI (smallest effect size of interest) of 0.25 letters/locations recalled, we calculate the Savage-Dickey density ratio [@roettger_meaningful_2025]. This lets us assess evidence for and against the null hypothesis that the effect of each predictor lies between -0.25 and 0.25, using a Bayes factor. All Bayes factors predict strong to extreme evidence in favor of the null hypothesis [@lee2014] that the given predictor does not have a meaningful effect on recall.
+
+With respect to the authors' prediction that 'gesturing will lead to better performance on a secondary task than speaking with hands still' \[\@hostetter_comparing_2023, p. 604\], the relevant Bayes factors are \~ 0.07 for letters and \< 0.01 for locations. So after seeing the data, our posterior belief that the difference between the 'gesture' and 'hands still' conditions is outside the ROPE is 0.07 and less than 0.01 times as probable after seeing the data, i.e. far less probable.
+
+While the authors do not state a hypothesis regarding the effect of the 'make' condition on recall, with respect to their question 'whether speech accompanying actions have a similar benefit', the relevant Bayes factores are \< 0.01 for both letters and locations. So, after seeing the data, our posterior beliefs that the difference between the 'gesture' and 'make' conditions is outside the ROPE is far less probable.
+
+As neither filled pauses nor deictic references are referenced by the authors as predictors of interest prior to running their analysis, we do not focus on these in our analysis of meaningful effect sizes.
+
+### SESOI Justification
+
+While, for a given trial, measurement of recall is limited to whole letters/locations recalled out of 6, our SESOI is smaller than one letter, as we consider the potential effects on memory over the course of many trials.
+
+We define a SESOI of 0.25 of a letter/location recalled, which is equivalent to 5% total recall of 5 letters/locations. This proportion is based on @langerock_cognitive_2025, which investigates the effects of lower vs. higher cognitive load-demanding tasks on recall, and reports effect sizes in the range of 5-15% recall difference within the scope of a given task. This is also supported by @rohrer_beat_2020 and @goldin-meadow_explaining_2001, which investigate recall as a function of gesture/non-gesture condition using different experimental designs, and report effects in the range of approximately 5-15% recall difference.
+
+It is important to note that Hostetter and Bahl's study uses increased recall on a secondary task as a proxy for the actual effect of interest, decreased cognitive load on the primary task where the occurs. The proposed mechanism is indirect and likely noisy, so we do not expect a large effect size.
+
+Based on the goal that these findings should be useful in future research, we consider a ROPE of ±5% difference in recall to be much more meaningful than a point-zero null. Thus, we select 5%, on the lower end of the scale, with the plan to investigate the robustness of this effect across a wider range of ROPEs.
+
+## Sensitivity analysis
+
+To assess the robustness of our findings for the Letter and Location model, we conducted a sensitivity analysis across a range of ROPE widths and prior specifications. Across both models, the Bayes factors consistently favour the null hypothesis. These findings remain stable across various priors and ROPE widths.
+
+**Letters Model**
+
+*Hands-still condition*. Under a narrow ROPE (±0.1), there is weak evidence for the effect of the Hands-still condition (BF = 0.24-0.68) (Figure 1). For our pre-defined SESOI (±0.25), the Bayes factors are all below 0.1 (BF = 0.12-0.05). Under wider ROPEs (±0.5 and above), the Bayes factors is 0, indicating evidence for the null hypothesis.\
+
+![Figure 1: Letters model / Hands-still condition](output/letters_handsstill_sensitivity.png){#fig-letters-handsstill fig-align="center" width="303"}
+
+*Make condition*. Across all ROPEs and priors, the Bayes factors are really close to zero (Figure 2). This suggests strong evidence that the effect of the Make condition is negligible.
+
+![Figure 2: Letters model / Make](output/letters_make_sensitivity.png){fig-align="left" width="303"}
+
+**Locations Model**\
+
+For the locations recalled model, both the Hands-still (Figure 3) and Make (Figure 4) conditions show strong evidence for the null at the SESOI level (±0.25), with Bayes factors very close to 0. For all ROPEs bigger that the SESOI (±0.5 and above), the Bayes factor is 0.
+
+![Figure 3: Locations model / Hands-still](output/locations_handsstill_sensitivity.png){width="303"}
+
+![Figure 4: Locations / Make](output/locations_make_sensitivity.png){width="303"}
+
+These results are highly robust to both prior choice and ROPE specification. Across all reasonable assumptions, the effects of condition on recall are consistently small and fall within regions of practical equivalence.
+
+Our sensitivity analysis suggests that the across numerous reasonable assumptions, the effect of condition (make/hands-still) on recall is consistently very small. Even with our relatively conservative SESOI of ±0.25, the Bayes factors provide strong evidence that the effects are not practically meaningful. In Hostetter and Bahl (2023), their frequentist analysis resulted in statistically significant differences. In contrast, our bayesian re-analysis and our sensitivity analysis, suggest that the effects are too small to be of practical importance under a wide range of plausible model assumptions.
+
+## References
+
+<!-- References will auto-populate in the refs div below -->
+
+::: {#refs}
+:::

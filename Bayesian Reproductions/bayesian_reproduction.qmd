@@ -495,9 +495,9 @@ locations_model_list <- readRDS("models/locations_model_loop.RDS")
 
 # specify different ROPE intervals of interest
 ropes <- list(c(-0.1, 0.1),
-              c(-0.3, 0.3),
+              c(-0.25, 0.25),
               c(-0.5, 0.5),
-              c(-0.7, 0.7),
+              c(-0.75, 0.75),
               c(-1, 1))
 
 # loop through different ropes: LETTERS
@@ -537,6 +537,10 @@ letters_results_make <- letters_results |>
   mutate(BF = exp(log_BF)) |> 
   select(prior_sd, BF, interval_range)
 
+# save results to prevent having to rerun these model combinations
+write_csv(letters_results_handsstill, "output/letters_sensitivity_handsstill.csv")
+write_csv(letters_results_make, "output/letters_sensitivity_make.csv")
+
 # loop through different ropes: LOCATIONS
 locations_results <- map_dfr(names(locations_model_list), function(model_name) {
   model <- locations_model_list[[model_name]]
@@ -574,12 +578,16 @@ locations_results_make <- locations_results |>
   separate(model, sep = "_", into = c(NA, NA, NA, NA, "prior_sd")) |> 
   mutate(BF = exp(log_BF)) |> 
   select(prior_sd, BF, interval_range)
+
+# save results to prevent having to rerun these model combinations
+write_csv(locations_results_handsstill, "output/locations_sensitivity_handsstill.csv")
+write_csv(locations_results_make, "output/locations_sensitivity_make.csv")
 ```
 
 ```{r}
 #| label: sensitivity analysis plots
 
-# visualise the BFs for the letter models in a raster
+# visualise the BFs for the hands still condition in the letter models 
 letters_handsstill_plot <- ggplot(letters_results_handsstill,
        aes(x = as.factor(prior_sd),
            y = as.factor(interval_range),
@@ -598,12 +606,17 @@ letters_handsstill_plot <- ggplot(letters_results_handsstill,
   labs(title = "(A) Bayes factor in favour of null", 
        subtitle = "Effect of hands still condition on letter recall",
        fill = "BF",
-       y = "ROPE in semi tones centered on 0\n ",
+       y = "ROPE",
        x = "\nprior standard deviation") +
   theme_minimal()
 
 letters_handsstill_plot
 
+# save plot
+ggsave("output/letters_handsstill_sensitivity.png",
+       plot = letters_handsstill_plot)
+
+# visualise the BFs for the make condition in the letter models 
 letters_make_plot <- ggplot(letters_results_make,
        aes(x = as.factor(prior_sd),
            y = as.factor(interval_range),
@@ -622,13 +635,17 @@ letters_make_plot <- ggplot(letters_results_make,
   labs(title = "(A) Bayes factor in favour of null", 
        subtitle = "Effect of make condition on letter recall",
        fill = "BF",
-       y = "ROPE in semi tones centered on 0\n ",
+       y = "ROPE",
        x = "\nprior standard deviation") +
   theme_minimal()
 
 letters_make_plot
 
-# visualise the BFs for the location models in a raster
+# save plot
+ggsave("output/letters_make_sensitivity.png",
+       plot = letters_make_plot)
+
+# visualise the BFs for the hands still condition in the location models
 locations_handsstill_plot <- ggplot(locations_results_handsstill,
        aes(x = as.factor(prior_sd),
            y = as.factor(interval_range),
@@ -647,12 +664,17 @@ locations_handsstill_plot <- ggplot(locations_results_handsstill,
   labs(title = "(A) Bayes factor in favour of null", 
        subtitle = "Effect of hands still condition on location recall",
        fill = "BF",
-       y = "ROPE in semi tones centered on 0\n ",
+       y = "ROPE",
        x = "\nprior standard deviation") +
   theme_minimal()
 
 locations_handsstill_plot
 
+# save plot
+ggsave("output/locations_handsstill_sensitivity.png",
+       plot = locations_handsstill_plot)
+
+# visualise the BFs for the make condition in the location models
 locations_make_plot <- ggplot(letters_results_make,
        aes(x = as.factor(prior_sd),
            y = as.factor(interval_range),
@@ -671,14 +693,42 @@ locations_make_plot <- ggplot(letters_results_make,
   labs(title = "(A) Bayes factor in favour of null", 
        subtitle = "Effect of make condition on location recall",
        fill = "BF",
-       y = "ROPE in semi tones centered on 0\n ",
+       y = "ROPE",
        x = "\nprior standard deviation") +
   theme_minimal()
 
 locations_make_plot
+
+# save plot
+ggsave("output/locations_make_sensitivity.png",
+       plot = locations_make_plot)
 ```
 
-### \[write up analysis of varying ROPEs and priors here\]
+## Sensitivity analysis
+
+To assess the robustness of our findings for the Letter and Location model, we conducted a sensitivity analysis across a range of ROPE widths and prior specifications, based on the sensitivity analysis presented in Roettger & Franke (2025). Across both models, the Bayes factors consistently favour the null hypothesis. These findings remain stable across various priors and ROPE widths.
+
+**Letters Model**
+
+*Hands-still condition*. Under a narrow ROPE (±0.1), there is weak evidence for the effect of the Hands-still condition (BF = 0.24-0.68) (Figure 1). For our pre-defined SESOI (±0.25), the Bayes factors are all below 0.1 (BF = 0.12-0.05). Under wider ROPEs (±0.5 and above), the Bayes factors is 0, indicating evidence for the null hypothesis.
+
+![Figure 1: Letters model / Hands-still condition](output/letters_handsstill_sensitivity.png){#fig-letters-handsstill fig-align="left" width="303"}
+
+*Make condition*. Across all ROPEs and priors, the Bayes factors are really close to zero (Figure 2). This suggests strong evidence that the effect of the Make condition is negligible.
+
+![Figure 2: Letters model / Make](output/letters_make_sensitivity.png){fig-align="left" width="303"}
+
+**Locations Model**\
+
+For the locations recalled model, both the Hands-still (Figure 3) and Make (Figure 4) conditions show strong evidence for the null at the SESOI level (±0.25), with Bayes factors very close to 0. For all ROPEs bigger that the SESOI (±0.5 and above), the Bayes factor is 0.
+
+![Figure 3: Locations model / Hands-still](output/locations_handsstill_sensitivity.png){width="303"}
+
+![Figure 4: Locations / Make](output/locations_make_sensitivity.png){width="303"}
+
+These results are highly robust to both prior choice and ROPE specification. Across all reasonable assumptions, the effects of condition on recall are consistently small and fall within regions of practical equivalence.
+
+Our sensitivity analysis suggests that the across numerous reasonable assumptions, the effect of condition (make/hands-still) on recall is consistently very small. Even with our relatively conservative SESOI of ±0.25, the Bayes factors provide strong evidence that the effects are not practically meaningful. In Hostetter and Bahl (2023), their frequentist analysis resulted in statistically significant differences. In contrast, our bayesian re-analysis and our sensitivity analysis, suggest that the effects are too small to be of practical importance under a wide range of plausible model assumptions.
 
 ## References
 
