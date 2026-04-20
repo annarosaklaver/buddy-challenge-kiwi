@@ -603,7 +603,7 @@ letters_handsstill_plot <- ggplot(letters_results_handsstill,
                        labels = c("0","0.03","0.1","0.33","1","3","10"),
                        oob = scales::squish
                        ) +
-  labs(title = "(A) Bayes factor in favour of null", 
+  labs(title = "Bayes factors in favour of null", 
        subtitle = "Effect of hands still condition on letter recall",
        fill = "BF",
        y = "ROPE",
@@ -632,7 +632,7 @@ letters_make_plot <- ggplot(letters_results_make,
                        labels = c("0","0.03","0.1","0.33","1","3","10"),
                        oob = scales::squish
                        ) +
-  labs(title = "(A) Bayes factor in favour of null", 
+  labs(title = "Bayes factors in favour of null", 
        subtitle = "Effect of make condition on letter recall",
        fill = "BF",
        y = "ROPE",
@@ -661,7 +661,7 @@ locations_handsstill_plot <- ggplot(locations_results_handsstill,
                        labels = c("0","0.03","0.1","0.33","1","3","10"),
                        oob = scales::squish
                        ) +
-  labs(title = "(A) Bayes factor in favour of null", 
+  labs(title = "Bayes factors in favour of null", 
        subtitle = "Effect of hands still condition on location recall",
        fill = "BF",
        y = "ROPE",
@@ -690,7 +690,7 @@ locations_make_plot <- ggplot(letters_results_make,
                        labels = c("0","0.03","0.1","0.33","1","3","10"),
                        oob = scales::squish
                        ) +
-  labs(title = "(A) Bayes factor in favour of null", 
+  labs(title = "Bayes factors in favour of null", 
        subtitle = "Effect of make condition on location recall",
        fill = "BF",
        y = "ROPE",
